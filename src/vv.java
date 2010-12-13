@@ -1,4 +1,3 @@
-import java.awt.Color;
 import java.util.Vector;
 
 import javax.swing.JFrame;
@@ -8,6 +7,7 @@ import com.flotandroidchart.flot.Options;
 import com.flotandroidchart.flot.data.AxisData;
 import com.flotandroidchart.flot.data.PointData;
 import com.flotandroidchart.flot.data.SeriesData;
+import com.flotandroidchart.flot.data.TickData;
 import com.flotandroidchart.flot.options.Axies;
 import com.flotandroidchart.flot.options.ColorHelper;
 import com.flotandroidchart.global.*;
@@ -51,7 +51,20 @@ public class vv {
 		sds.add(sd2);		
 		
 		Options opt = new Options();
+		Vector<TickData> ticks = new Vector<TickData>();
+		ticks.add(new TickData(0.0, ""));
+		ticks.add(new TickData(Math.PI/2, "\u03c0/2"));
+		ticks.add(new TickData(Math.PI, "\u03c0"));
+		ticks.add(new TickData(Math.PI * 3/2, "3\u03c0/2"));
+		ticks.add(new TickData(Math.PI * 2, "2\u03c0"));
+		opt.xaxis.ticks = ticks;
 		
+		opt.yaxis.ticks = new Integer(10);
+		opt.yaxis.max = 2;
+		opt.yaxis.min = -2;
+
+		opt.series.points.show = true;
+		opt.series.lines.setShow(true);
 
 		FlotDraw fd = new FlotDraw(null, sds, opt, null);
 

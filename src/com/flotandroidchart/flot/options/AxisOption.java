@@ -1,6 +1,7 @@
 package com.flotandroidchart.flot.options;
 
 import com.flotandroidchart.flot.format.DoubleFormatter;
+import com.flotandroidchart.flot.format.TickFormatter;
 
 public class AxisOption {
 	public String mode = null;
@@ -11,7 +12,7 @@ public class AxisOption {
 	public double autoscaleMargin = Double.NaN;
 
 	public Object ticks = null;
-	public Object tickFormatter = null;
+	public TickFormatter tickFormatter = null;
 	public int labelWidth = -1;
 	public int labelHeight = -1;
 
