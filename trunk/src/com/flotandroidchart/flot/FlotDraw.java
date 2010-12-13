@@ -251,6 +251,19 @@ public class FlotDraw implements Serializable {
 	}
 
 	public void fillInSeriesOptions() {
+		for(int k =0;k<series.size();k++) {
+			SeriesData s = series.get(k);
+			if(!s.series.lines.getShow() && options.series.lines.getShow()) {
+				s.series.lines.setShow(options.series.lines.getShow());
+			}
+			if(!s.series.points.show && options.series.points.show) {
+				s.series.points.show = options.series.points.show;
+			}
+			if(!s.series.bars.show && options.series.bars.show) {
+				s.series.bars.show = options.series.bars.show;
+			}
+		}
+		
 		int neededColors = series.size();
 
 		Vector<Integer> colors = new Vector<Integer>();
@@ -1265,6 +1278,30 @@ public class FlotDraw implements Serializable {
 		if (axisOption.ticks == null) {
 			axis.ticks = axis.tickGenerator.generator(axis);
 		}
+		else if(axisOption.ticks instanceof Integer) {
+			int tickCnt = ((Integer)axisOption.ticks).intValue();
+			if(tickCnt > 0) {
+				axis.ticks = axis.tickGenerator.generator(axis);
+			}
+		}
+		else if(axisOption.ticks instanceof Vector) {
+			axis.ticks = new Vector<TickData>();
+			Vector<TickData> ticks = (Vector<TickData>)axisOption.ticks;
+			if(ticks != null) {
+				for(int i=0;i<ticks.size();i++) {
+					String label = "";
+					double v = 0;
+					TickData td = ticks.get(i);
+					if(td != null) {
+						v = td.v;
+						label = td.label;
+						if(label == null || label.length() == 0)
+							label = axis.tickFormatter.formatNumber(v, axis);
+						axis.ticks.add(new TickData(v, label));
+					}
+				}
+			}
+		}
 
 		if (!Double.isNaN(axisOption.autoscaleMargin) && axis.ticks.size() > 0) {
 			if (Double.isNaN(axisOption.min)) {
@@ -1280,8 +1317,11 @@ public class FlotDraw implements Serializable {
 	private void prepareTickGeneration(AxisData axis, AxisOption axisOption) {
 		double noTicks;
 		double axisOptionTicks = -1.0;
-		if (axisOption.ticks instanceof Double) {
-			axisOptionTicks = ((Double) axisOption.ticks).doubleValue();
+		double size = 1;
+		TickGenerator generator = null;
+		TickFormatter formatter = null;
+		if (axisOption.ticks instanceof Integer) {
+			axisOptionTicks = ((Integer) axisOption.ticks).intValue();
 		}
 		if (axisOptionTicks > 0) {
 			noTicks = axisOptionTicks;
@@ -1291,7 +1331,7 @@ public class FlotDraw implements Serializable {
 			noTicks = 0.3 * Math.sqrt(canvasHeight);
 		}
 
-		double delta = (axis.datamax - axis.datamin) / noTicks;
+		double delta = (axis.max - axis.min) / noTicks;
 
 		if (axisOption.mode != null && axisOption.mode.equals("time")) {
 
@@ -1306,7 +1346,7 @@ public class FlotDraw implements Serializable {
 			double magn = Math.pow(10, -dec);
 			double norm = delta / magn;
 
-			double size = 1;
+			
 			if (norm < 1.5) {
 				size = 1;
 			} else if (norm < 3) {
@@ -1333,12 +1373,20 @@ public class FlotDraw implements Serializable {
 			}
 
 			axis.tickDecimals = Math.max(0, (maxDec != -1 ? maxDec : dec));
-
-			axis.tickSize = size;
-			axis.tickGenerator = new TickGenerator();
-
-			axis.tickFormatter = new TickFormatter();
+			generator = new TickGenerator();
+			formatter = new TickFormatter();
 		}
+		
+		axis.tickSize = size;
+		axis.tickGenerator = generator;
+		
+		if(axisOption.tickFormatter != null) {
+			axis.tickFormatter = axisOption.tickFormatter;
+		}
+		else {
+		    axis.tickFormatter = formatter;
+		}
+
 	}
 
 	Graphics2D grap = null;
