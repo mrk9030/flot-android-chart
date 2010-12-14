@@ -69,8 +69,8 @@ public class vv {
 		opt.grid.backgroundColor = new int[]{0xffffff, 0xeeeeee};
 		
 		opt.yaxis.ticks = new Integer(10);
-		opt.yaxis.max = 2;
-		opt.yaxis.min = -2;
+		opt.yaxis.max = 4;
+		opt.yaxis.min = -1;
 
 		opt.series.points.show = true;
 		opt.series.lines.setShow(true);

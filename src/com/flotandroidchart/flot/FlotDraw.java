@@ -30,6 +30,9 @@ import com.flotandroidchart.flot.options.AxisOption;
 import com.flotandroidchart.flot.options.ColorHelper;
 import com.flotandroidchart.flot.options.Grid;
 import com.flotandroidchart.global.EventHolder;
+import com.flotandroidchart.global.FlotEvent;
+import com.flotandroidchart.global.FlotEventListener;
+import com.flotandroidchart.global.HookEventObject;
 
 public class FlotDraw implements Serializable {
 
@@ -45,6 +48,8 @@ public class FlotDraw implements Serializable {
 	private Object canvas;
 
 	private Object overlay;
+	
+	private EventHolder hookHolder;
 
 	private EventHolder eventHolder;
 
@@ -73,9 +78,24 @@ public class FlotDraw implements Serializable {
 		axes.yaxis = new AxisData();
 		axes.x2axis = new AxisData();
 		axes.y2axis = new AxisData();
+		hookHolder = new EventHolder();
 		// canvasWidth = 320;
+		parseOptions(options);
 		setData(series);
 		// setupGrid();
+	}
+	
+	public void parseOptions(Options opt) {
+		
+		hookHolder.dispatchEvent(FlotEvent.HOOK_PROCESSOPTIONS, new FlotEvent(new HookEventObject(this, new Object[]{opt})));
+	}
+	
+	public void addHookListener(FlotEventListener flot) {
+		hookHolder.addEventListener(flot);
+	}
+	
+	public void removeHookListener(FlotEventListener flot) {
+		hookHolder.removeEventListener(flot);
 	}
 
 	private void setRange(AxisData axis, AxisOption axisOption) {
@@ -143,6 +163,13 @@ public class FlotDraw implements Serializable {
 	}
 
 	public void processData() {
+		
+		for (int i = 0; i < series.size(); i++) {
+			SeriesData sd = series.get(i);
+			hookHolder.dispatchEvent(FlotEvent.HOOK_PROCESSRAWDATA, new FlotEvent(
+					new HookEventObject(this, new Object[]{sd, sd.getData(), sd.datapoints})));
+		}
+		
 		for (int i = 0; i < series.size(); i++) {
 			SeriesData sd = series.get(i);
 			double[][] data = sd.getData();
@@ -192,6 +219,13 @@ public class FlotDraw implements Serializable {
 					}
 				}
 			}
+		}
+		
+
+		for (int i = 0; i < series.size(); i++) {
+			SeriesData sd = series.get(i);
+			hookHolder.dispatchEvent(FlotEvent.HOOK_PROCESSDATAPOINTS, new FlotEvent(
+					new HookEventObject(this, new Object[]{sd, sd.datapoints})));
 		}
 
 		double xmin = Double.MAX_VALUE;
@@ -632,6 +666,10 @@ public class FlotDraw implements Serializable {
 		for (int i = 0; i < series.size(); i++) {
 			drawSeries(series.get(i));
 		}
+		
+
+		hookHolder.dispatchEvent(FlotEvent.HOOK_DRAW, new FlotEvent(
+				new HookEventObject(this, new Object[]{grap})));
 
 		if (grid.show && grid.aboveData) {
 			drawGrid();
