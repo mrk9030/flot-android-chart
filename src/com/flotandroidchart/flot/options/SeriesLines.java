@@ -5,7 +5,7 @@ public class SeriesLines {
 	public Boolean showSet = false;
 	public int lineWidth = 2;
 	public Boolean fill = false;
-	public int fillColor = 0xff0000;
+	public Object fillColor = new Integer(0xff0000);
 	public Boolean steps = false;
 
 	public void setShow(Boolean _s) {

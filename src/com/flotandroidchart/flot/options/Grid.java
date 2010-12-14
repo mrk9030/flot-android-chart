@@ -4,7 +4,7 @@ public class Grid {
 	public Boolean show = true;
 	public Boolean aboveData = false;
 	public int color = 0x545454;
-	public String backgroundColor = null;
+	public Object backgroundColor = null;
 	public int tickColor = 0x26000000;
 	public int labelMargin = 5;
 	public int borderWidth = 2;

@@ -50,6 +50,14 @@ public class vv {
 		sd2.label = "tan(x)";
 		sds.add(sd2);		
 		
+		/*
+		SeriesData sd3 = new SeriesData();
+		sd3.setData(new double[][]{{1, 1}, {3, 2.5}});
+		sd3.label = "Bars";
+		sd3.series.bars.show = true;
+		sds.add(sd3);
+		*/
+		
 		Options opt = new Options();
 		Vector<TickData> ticks = new Vector<TickData>();
 		ticks.add(new TickData(0.0, ""));
@@ -58,6 +66,7 @@ public class vv {
 		ticks.add(new TickData(Math.PI * 3/2, "3\u03c0/2"));
 		ticks.add(new TickData(Math.PI * 2, "2\u03c0"));
 		opt.xaxis.ticks = ticks;
+		opt.grid.backgroundColor = new int[]{0xffffff, 0xeeeeee};
 		
 		opt.yaxis.ticks = new Integer(10);
 		opt.yaxis.max = 2;

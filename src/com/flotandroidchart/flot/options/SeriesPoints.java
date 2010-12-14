@@ -5,5 +5,5 @@ public class SeriesPoints {
 	public int radius = 3;
 	public int lineWidth = 2;
 	public Boolean fill = true;
-	public int fillColor = 0xffffff;
+	public Object fillColor = new Integer(0xffffff);
 }
