@@ -5,7 +5,7 @@ public class SeriesBars {
 	public int lineWidth = 2;
 	public int barWidth = 1;
 	public Boolean fill = true;
-	public String fillColor = null;
+	public Object fillColor = null;
 	public String align = "left";
 	public Boolean horizontal = false;
 }

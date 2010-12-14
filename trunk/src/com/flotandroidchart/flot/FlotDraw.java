@@ -5,6 +5,8 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.LinearGradientPaint;
+import java.awt.Paint;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
 import java.io.Serializable;
@@ -373,17 +375,20 @@ public class FlotDraw implements Serializable {
 			AxisData axis = e.nextElement();
 			this.setTransformationHelpers(axis, ht.get(axis));
 		}
-
-		if (options.grid.show) {
-			insertLabels();
-		}
 	}
 
 	private void drawGrid() {
 		AffineTransform old = grap.getTransform();
 
 		grap.translate(plotOffset.left, plotOffset.top);
-		grap.setColor(new Color(options.grid.tickColor, true));
+		
+		if(options.grid.backgroundColor != null) {
+			grap.setPaint(getColorOrGradient(options.grid.backgroundColor, plotHeight, 0, 0xffffff));
+			grap.fillRect(0, 0, plotWidth, plotHeight);
+		}
+		
+		
+		grap.setColor(getTranColor(options.grid.tickColor));
 		grap.setStroke(new BasicStroke(1, BasicStroke.CAP_BUTT,
 				BasicStroke.CAP_ROUND));
 		GeneralPath shape = new GeneralPath();
@@ -450,7 +455,7 @@ public class FlotDraw implements Serializable {
 
 		grap.draw(shape);
 
-		grap.setColor(new Color(options.grid.borderColor));
+		grap.setColor(getTranColor(options.grid.borderColor));
 		grap.setStroke(new BasicStroke(options.grid.borderWidth,
 				BasicStroke.CAP_BUTT, BasicStroke.CAP_ROUND));
 		if (options.grid.borderWidth > 0) {
@@ -580,6 +585,42 @@ public class FlotDraw implements Serializable {
 
 		grap.draw(shape);
 	}
+	
+	private Paint getFillStyle(boolean filloptions, Object fillColor, int seriesColor, double bottom, double top){
+		if(!filloptions) {
+			return null;
+		}
+		if(fillColor != null) {
+			return getColorOrGradient(fillColor, bottom, top, seriesColor);
+		}
+		return new Color(seriesColor | 0x66000000, true);
+	}
+	
+	private Paint getColorOrGradient(Object spec, double bottom, double top, int defaultColor) {
+		if(spec instanceof Integer) {
+			return getTranColor(((Integer)spec).intValue());
+		}
+		else if(spec instanceof int[]){
+			int[] specColors = (int[])spec;
+			if(specColors != null) {
+				float[] dist = new float[specColors.length];
+				Color[] colors = new Color[specColors.length];
+				
+				for(int i=0;i<specColors.length;i++) {
+					dist[i] = i/(specColors.length - 1.0f);
+					colors[i] = getTranColor(specColors[i]);
+				}
+				
+				return new LinearGradientPaint(0.0f, (float)top, (float)0, (float)bottom, dist, colors);
+			}
+		}
+		return getTranColor(defaultColor);
+	}
+	
+	private Color getTranColor(int rgba){
+		return new Color(rgba, ((rgba >> 24) != 0));
+	}
+	
 
 	private void draw() {
 		Grid grid = options.grid;
@@ -594,6 +635,10 @@ public class FlotDraw implements Serializable {
 
 		if (grid.show && grid.aboveData) {
 			drawGrid();
+		}
+		
+		if (options.grid.show) {
+			insertLabels();
 		}
 		
 		insertLegend();
@@ -647,7 +692,7 @@ public class FlotDraw implements Serializable {
 			grap.setStroke(new BasicStroke(1));
 			grap.drawRect(width * (i%nWidth), (height - 10)/2 + height * (i / nWidth), 14, 10);
 			
-			grap.setColor(new Color(s.series.color));
+			grap.setColor(getTranColor(s.series.color));
 			grap.fillRect(2 + width * (i%nWidth), (height - 10)/2 + height * (i/nWidth) + 2, 11, 7);
 			
 			grap.setColor(new Color(0x545454));
@@ -695,7 +740,7 @@ public class FlotDraw implements Serializable {
 
 		grap.setStroke(new BasicStroke(lw, BasicStroke.CAP_BUTT,
 				BasicStroke.CAP_ROUND));
-		grap.setColor(new Color(currentSeries.series.color));
+		grap.setColor(getTranColor(currentSeries.series.color));
 		plotPoints(true, currentSeries, currentSeries.datapoints, radius, 0, 360,
 				currentSeries.axes.xaxis, currentSeries.axes.yaxis);
 
@@ -715,14 +760,17 @@ public class FlotDraw implements Serializable {
 					|| y < axisy.min || y > axisy.max) {
 				continue;
 			}
+			
+			Paint p = getFillStyle(currentSeries.series.points.fill,
+					currentSeries.series.points.fillColor, currentSeries.series.color, 0, 0);
 
-			if (fill && currentSeries.series.points.fill) {
-				grap.setPaint(new Color(currentSeries.series.points.fillColor));
+			if (fill && currentSeries.series.points.fill && p!=null) {
+				grap.setPaint(p);
 				grap.fillArc((int) (axisx.p2c.format(x) - radius),
 						(int) (axisy.p2c.format(y) + offset - radius),
 						(int) (2 * radius), (int) (2 * radius), 180,
 						circumference);
-				grap.setColor(new Color(currentSeries.series.color));
+				grap.setColor(getTranColor(currentSeries.series.color));
 				grap.setStroke(new BasicStroke(currentSeries.series.lines.lineWidth,
 						BasicStroke.CAP_BUTT, BasicStroke.CAP_ROUND));
 				grap.drawArc((int) (axisx.p2c.format(x) - radius),
@@ -838,8 +886,9 @@ public class FlotDraw implements Serializable {
 		top = axisy.p2c.format(top);
 
 		GeneralPath c = new GeneralPath();
+		Paint p = this.getFillStyle(currentSeries.series.bars.fill, currentSeries.series.bars.fillColor, currentSeries.series.color, bottom, top);
 		if (currentSeries.series.bars.fill) {
-			grap.setPaint(new Color(currentSeries.series.color | 0x64000000, true));
+			grap.setPaint(p);
 			c.moveTo(left, bottom);
 			c.lineTo(left, top);
 			c.lineTo(right, top);
@@ -854,7 +903,7 @@ public class FlotDraw implements Serializable {
 			BasicStroke bstroke = new BasicStroke(currentSeries.series.bars.barWidth,
 					BasicStroke.CAP_BUTT, BasicStroke.CAP_ROUND);
 			grap.setStroke(bstroke);
-			grap.setColor(new Color(currentSeries.series.color));
+			grap.setColor(getTranColor(currentSeries.series.color));
 
 			// FIXME: inline moveTo is buggy with excanvas
 			c.moveTo(left, bottom + offset);
@@ -905,14 +954,15 @@ public class FlotDraw implements Serializable {
 		}
 
 		grap.setStroke(bstroke);
-		if (options.series.lines.fill) {
-			grap.setColor(new Color(options.series.lines.fillColor));
+		Paint p = this.getFillStyle(options.series.lines.fill, options.series.lines.fillColor, currentSeries.series.color, 0, plotHeight);
+		if (options.series.lines.fill && p!= null) {
+			grap.setPaint(p);
 			plotLineArea(currentSeries.datapoints, currentSeries.axes.xaxis,
 					currentSeries.axes.yaxis);
 		}
 
 		if (lw > 0) {
-			grap.setColor(new Color(currentSeries.series.color));
+			grap.setColor(getTranColor(currentSeries.series.color));
 			plotLine(currentSeries.datapoints, 0, 0, currentSeries.axes.xaxis,
 					currentSeries.axes.yaxis);
 		}
