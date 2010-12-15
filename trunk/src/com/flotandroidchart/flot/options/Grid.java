@@ -1,5 +1,7 @@
 package com.flotandroidchart.flot.options;
 
+import com.flotandroidchart.flot.format.TooltipFormatter;
+
 public class Grid {
 	public Boolean show = true;
 	public Boolean aboveData = false;
@@ -16,4 +18,7 @@ public class Grid {
 	public Boolean hoverable = false;
 	public Boolean autoHighlight = true;
 	public int mouseActiveRadius = 10;
+	public int tooltipColor = 0x545454;
+	public Object tooltipFillColor = new Integer(0xffff67);
+	public TooltipFormatter tooltipFormatter = null;
 }
