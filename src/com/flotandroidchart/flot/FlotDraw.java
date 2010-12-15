@@ -10,6 +10,7 @@ import java.awt.Paint;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
+import java.awt.geom.RoundRectangle2D;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.Enumeration;
@@ -101,53 +102,71 @@ public class FlotDraw implements Serializable {
 				if(event.getSource() instanceof MouseEvent){
 					MouseEvent evt = (MouseEvent)event.getSource();
 					if(evt != null){
-						double canvasX = evt.getX() - plotOffset.left;
-						double canvasY = evt.getY() - plotOffset.top;
-						double posX =0, posY = 0;
-						if(axes.xaxis.used) {
-							posX = axes.xaxis.c2p.format(canvasX);
-						}
-						if(axes.yaxis.used) {
-							posY = axes.yaxis.c2p.format(canvasY);
-						}
-						
-						NearItemData item = findNearbyItem(canvasX, canvasY);
-						
-						if(item != null) {
-							item.pageX = (int)(item.series.axes.xaxis.p2c.format(item.datapoint[0]) + plotOffset.left);
-							item.pageY = (int)(item.series.axes.yaxis.p2c.format(item.datapoint[1]) + plotOffset.top);
-						}
-						
-						if(options.grid.autoHighlight) {
-							boolean _redraw = false;
-							for(int i=0;i<highlights.size();i++) {
-								HighlightData h = highlights.get(i);
-								if(h.auto.equals("hover") &&
-								   !(item != null && h.series == item.series && h.point == item.datapoint)) {
-									unhighlight(h.series, h.point);
-									_redraw = true;
-								}
-							}
-							
-							if(item != null) {
-								highlight(item.series, item.datapoint, "hover");
-								_redraw = true;
-							}
-							
-							if(_redraw) {
-								//finished = true;
-								redraw();
-							}
-						}
+						executeHighlight(Name(), evt);
 					}
 				}
 			}
 			
 		});
+		eventHolder.addEventListener(new FlotEventListener(){
+
+			@Override
+			public String Name() {
+				// TODO Auto-generated method stub
+				return FlotEvent.MOUSE_CLICK;
+			}
+
+			@Override
+			public void execute(FlotEvent event) {
+				// TODO Auto-generated method stub
+				if(redrawing) {
+					return;
+				}
+				if(event.getSource() instanceof MouseEvent){
+					MouseEvent evt = (MouseEvent)event.getSource();
+					if(evt != null){	
+						executeHighlight(Name(), evt);
+					}
+				}
+			}
+			
+		});
+
 		// canvasWidth = 320;
 		parseOptions(options);
 		setData(series);
 		// setupGrid();
+	}
+	
+	private void executeHighlight(String name, MouseEvent evt) {
+
+		double canvasX = evt.getX() - plotOffset.left;
+		double canvasY = evt.getY() - plotOffset.top;
+		
+		NearItemData item = findNearbyItem(canvasX, canvasY);
+				
+		if(options.grid.autoHighlight) {
+			boolean _redraw = false;
+			for(int i=0;i<highlights.size();i++) {
+				HighlightData h = highlights.get(i);
+				if(h.auto.equals(name) &&
+				   !(item != null && h.series == item.series && h.point == item.datapoint)) {
+					unhighlight(h.series, h.point);
+					_redraw = true;
+				}
+			}
+			
+			if(item != null) {
+				highlight(item.series, item.datapoint, name, item.dataIndex);
+				_redraw = true;
+			}
+			
+			if(_redraw) {
+				//finished = true;
+				redraw();
+			}
+		}
+
 	}
 	
 	public NearItemData findNearbyItem(double mouseX,
@@ -222,7 +241,6 @@ public class FlotDraw implements Serializable {
 		if(item != null && item.length == 2) {
 			i = item[0];
 			j = item[1];
-			int ps = series.get(i).datapoints.pointsize;
 			
 			return new NearItemData(series.get(i).getData()[j],
 					                 j,
@@ -1660,13 +1678,64 @@ public class FlotDraw implements Serializable {
 		grap.translate(plotOffset.left, plotOffset.top);
 		for(int i=0;i<highlights.size();i++) {
 			HighlightData hi = highlights.get(i);
-			
+
+			SeriesData s = hi.series;
+			AxisData axisx = s.axes.xaxis;
+			AxisData axisy = s.axes.yaxis;
+			double x = axisx.p2c.format(hi.point[0]);
+			double y = axisy.p2c.format(hi.point[1]);
 			if(hi.series.series.bars.show) {
+				//x = x + (hi.series.series.bars.align.equals("left") ? (hi.series.series.bars.barWidth / 2) : 0);
+				y = axisy.p2c.format(hi.point[1]/2);
 				drawBarHighlight(hi.series, hi.point);
 			}
 			else {
 				drawPointHighlight(hi.series, hi.point);
+			}			
+			
+			boolean drawLeft = (x > (plotWidth / 2));
+			boolean drawTop = (y > (plotHeight / 2));
+			
+			String strX = String.format("%.2f", hi.point[0]);
+			String strY = String.format("%.2f", hi.point[1]);
+			
+			String tooltip = options.grid.tooltipFormatter != null ? options.grid.tooltipFormatter.format(s, hi.dataIndex) :
+				"(" + strX + "," + strY + ")";
+			FontMetrics fm = grap.getFontMetrics();
+			int strWidth = fm.stringWidth(tooltip);
+			int strHeight = fm.getHeight();
+
+			GeneralPath gp = new GeneralPath();
+			
+			double startX = x + (drawLeft ? -1 : 1) * (strWidth + 40);
+			double startY = y + (drawTop ? -1 : 1) * (strHeight + 40);
+			
+			gp.moveTo(startX, startY);
+			double endX = startX + (drawLeft ? 1 : -1) * (strWidth + 30);
+			gp.lineTo(endX, startY);
+			double endY = startY + (drawTop ? 1 : -1) * (strHeight + 30);
+			gp.lineTo(endX, endY);
+			double middleX = endX + (drawLeft ? -1 : 1) * 10;
+			gp.lineTo(middleX, endY);
+			gp.lineTo(x, y);
+			double middleX1 = startX + (drawLeft ? 1 : -1) * 10;
+			gp.lineTo(middleX1, endY);
+			gp.lineTo(startX, endY);
+			gp.closePath();
+
+			Paint p = this.getFillStyle(true, options.grid.tooltipFillColor, 0xffff67, strHeight+40, 0);
+			if(p != null) {
+				grap.setPaint(p);
+				grap.fill(gp);
 			}
+			grap.setStroke(new BasicStroke(1));
+			grap.setColor(new Color(options.grid.tooltipColor));
+			grap.draw(gp);
+			
+			grap.setColor(new Color(0x0));	
+			startX = startX + (drawLeft ? 0 : -1) * (strWidth + 30);
+			startY = startY + (drawTop ? 0 : -1) * (strHeight + 30);
+			drawCenteredString(tooltip, (int) startY, (int) startX, strWidth + 30, strHeight + 30);					
 		}
 		grap.setTransform(old);
 	}
@@ -1689,6 +1758,8 @@ public class FlotDraw implements Serializable {
 		grap.setColor(new Color(series.series.color | 0x80000000, true));
 		double radius = 1.5 * pointRadius;
 		grap.drawArc((int)(axisx.p2c.format(x) - radius), (int)(axisy.p2c.format(y) - radius), (int)(2 * radius), (int)(2 * radius), 0, 360);
+		
+		
 		
 	}
 	
@@ -1737,11 +1808,10 @@ public class FlotDraw implements Serializable {
 		return options;
 	}
 
-	public void highlight(SeriesData s, double[] point, String auto) {
+	public void highlight(SeriesData s, double[] point, String auto, int dataIndex) {
 		int i = indexOfHighlight(s, point);
 		if(i == -1) {
-			highlights.add(new HighlightData(s, point, auto));
-			//####redraw
+			highlights.add(new HighlightData(s, point, auto, dataIndex));
 		}
 		else if(auto == null || auto.length() == 0) {
 			highlights.get(i).auto = "false";

@@ -2,6 +2,7 @@ import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 
 import com.flotandroidchart.global.EventHolder;
@@ -41,6 +42,40 @@ public class FlotOverlay extends Component {
 			public void mouseMoved(MouseEvent arg0) {
 				// TODO Auto-generated method stub
 				eventHolder.dispatchEvent(FlotEvent.MOUSE_HOVER, new FlotEvent(arg0));
+			}
+			
+		});
+		
+		this.addMouseListener(new MouseListener() {
+
+			@Override
+			public void mouseClicked(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				eventHolder.dispatchEvent(FlotEvent.MOUSE_CLICK, new FlotEvent(arg0));
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mouseExited(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mousePressed(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
 			}
 			
 		});
