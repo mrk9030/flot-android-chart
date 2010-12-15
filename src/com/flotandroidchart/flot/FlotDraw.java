@@ -7,17 +7,22 @@ import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.LinearGradientPaint;
 import java.awt.Paint;
+import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.Vector;
 
 import com.flotandroidchart.flot.data.AxisData;
 import com.flotandroidchart.flot.data.Datapoints;
 import com.flotandroidchart.flot.data.FormatData;
+import com.flotandroidchart.flot.data.HighlightData;
+import com.flotandroidchart.flot.data.NearItemData;
 import com.flotandroidchart.flot.data.RectOffset;
 import com.flotandroidchart.flot.data.SeriesData;
 import com.flotandroidchart.flot.data.TickData;
@@ -63,7 +68,6 @@ public class FlotDraw implements Serializable {
 	private int plotHeight;
 
 	private Object hooks;
-
 	public FlotDraw(Object _canvas, Vector<SeriesData> _data, Options _options,
 			Object _plugins) {
 		series = _data;
@@ -79,12 +83,167 @@ public class FlotDraw implements Serializable {
 		axes.x2axis = new AxisData();
 		axes.y2axis = new AxisData();
 		hookHolder = new EventHolder();
+		eventHolder = new EventHolder();
+		eventHolder.addEventListener(new FlotEventListener(){
+
+			@Override
+			public String Name() {
+				// TODO Auto-generated method stub
+				return FlotEvent.MOUSE_HOVER;
+			}
+
+			@Override
+			public void execute(FlotEvent event) {
+				// TODO Auto-generated method stub
+				if(redrawing) {
+					return;
+				}
+				if(event.getSource() instanceof MouseEvent){
+					MouseEvent evt = (MouseEvent)event.getSource();
+					if(evt != null){
+						double canvasX = evt.getX() - plotOffset.left;
+						double canvasY = evt.getY() - plotOffset.top;
+						double posX =0, posY = 0;
+						if(axes.xaxis.used) {
+							posX = axes.xaxis.c2p.format(canvasX);
+						}
+						if(axes.yaxis.used) {
+							posY = axes.yaxis.c2p.format(canvasY);
+						}
+						
+						NearItemData item = findNearbyItem(canvasX, canvasY);
+						
+						if(item != null) {
+							item.pageX = (int)(item.series.axes.xaxis.p2c.format(item.datapoint[0]) + plotOffset.left);
+							item.pageY = (int)(item.series.axes.yaxis.p2c.format(item.datapoint[1]) + plotOffset.top);
+						}
+						
+						if(options.grid.autoHighlight) {
+							boolean _redraw = false;
+							for(int i=0;i<highlights.size();i++) {
+								HighlightData h = highlights.get(i);
+								if(h.auto.equals("hover") &&
+								   !(item != null && h.series == item.series && h.point == item.datapoint)) {
+									unhighlight(h.series, h.point);
+									_redraw = true;
+								}
+							}
+							
+							if(item != null) {
+								highlight(item.series, item.datapoint, "hover");
+								_redraw = true;
+							}
+							
+							if(_redraw) {
+								//finished = true;
+								redraw();
+							}
+						}
+					}
+				}
+			}
+			
+		});
 		// canvasWidth = 320;
 		parseOptions(options);
 		setData(series);
 		// setupGrid();
 	}
 	
+	public NearItemData findNearbyItem(double mouseX,
+			                            double mouseY) {
+		int maxDistance = options.grid.mouseActiveRadius;
+		double smallestDistance = maxDistance * maxDistance + 1;
+		int[] item = null;
+		boolean foundPoint = false;
+		int i,j;
+		
+		for(i=0;i<series.size();i++) {
+			SeriesData s = series.get(i);
+			
+			if(!options.grid.hoverable) {
+				continue;
+			}
+			AxisData axisx = s.axes.xaxis;
+			AxisData axisy = s.axes.yaxis;
+			Vector<Double> points = s.datapoints.points;
+			int ps = s.datapoints.pointsize;
+			double mx = axisx.c2p.format(mouseX);
+			double my = axisy.c2p.format(mouseY);
+			double maxx = maxDistance / axisx.scale;
+			double maxy = maxDistance / axisy.scale;
+			
+			if(s.series.lines.getShow() || s.series.points.show) {
+				for(j=0;j<points.size();j+=ps){
+					double x = points.get(j).doubleValue();
+					double y = points.get(j + 1).doubleValue();
+					
+					if(x - mx > maxx || x - mx < -maxx ||
+					   y - my > maxy || y - my < -maxy) {
+						continue;
+					}
+					
+					double dx = Math.abs(axisx.p2c.format(x) - mouseX);
+					double dy = Math.abs(axisy.p2c.format(y) - mouseY);
+					double dist = dx * dx + dy * dy;
+					
+					if(dist <= smallestDistance) {
+						smallestDistance = dist;
+						item = new int[2];
+						item[0] = i;
+						item[1] = j / ps;
+					}
+				}
+			}
+			
+			if(s.series.bars.show && item == null) {
+				double barLeft = s.series.bars.align.equals("left") ? 0 : -s.series.bars.barWidth/2;
+				double barRight = barLeft + s.series.bars.barWidth;
+				
+				for(j=0;j<points.size();j+=ps) {
+					double x = points.get(j);
+					double y = points.get(j+1);
+					double b = points.get(j+2);
+					
+					if(s.series.bars.horizontal ? 
+                            (mx <= Math.max(b, x) && mx >= Math.min(b, x) && 
+                                    my >= y + barLeft && my <= y + barRight) :
+                                   (mx >= x + barLeft && mx <= x + barRight &&
+                                    my >= Math.min(b, y) && my <= Math.max(b, y))) {
+						item = new int[2];
+						item[0] = i;
+						item[1] = j/ps;
+					}
+					
+				}
+			}
+		}
+		
+		if(item != null && item.length == 2) {
+			i = item[0];
+			j = item[1];
+			int ps = series.get(i).datapoints.pointsize;
+			
+			return new NearItemData(series.get(i).getData()[j],
+					                 j,
+					                 series.get(i),
+					                 i);
+		}
+		return null;
+	}
+	
+	private void redraw(){
+		eventHolder.dispatchEvent(FlotEvent.CANVAS_REPAINT, new FlotEvent(this));
+	}
+	
+	public EventHolder getEventHolder() {
+		return eventHolder;
+	}
+
+	public void setEventHolder(EventHolder eventHolder) {
+		this.eventHolder = eventHolder;
+	}
+
 	public void parseOptions(Options opt) {
 		
 		hookHolder.dispatchEvent(FlotEvent.HOOK_PROCESSOPTIONS, new FlotEvent(new HookEventObject(this, new Object[]{opt})));
@@ -655,7 +814,7 @@ public class FlotDraw implements Serializable {
 		return new Color(rgba, ((rgba >> 24) != 0));
 	}
 	
-
+	private boolean redrawing = true;
 	private void draw() {
 		Grid grid = options.grid;
 
@@ -1355,8 +1514,8 @@ public class FlotDraw implements Serializable {
 			}
 		}
 
-		System.out.println("Width:" + axis.labelWidth + "Height:"
-				+ axis.labelHeight);
+		/*System.out.println("Width:" + axis.labelWidth + "Height:"
+				+ axis.labelHeight);*/
 	}
 
 	private void setTicks(AxisData axis, AxisOption axisOption) {
@@ -1479,15 +1638,67 @@ public class FlotDraw implements Serializable {
 
 	Graphics2D grap = null;
 	Font defaultFont = null;
+	Vector<HighlightData> highlights = new Vector<HighlightData>();
 
 	public void draw(Graphics2D g, int width, int height, Font font) {
+		redrawing = true;
 		grap = g;
 		canvasWidth = width;
 		canvasHeight = height;
 		defaultFont = font;
 		setupGrid();
 		draw();
+		drawOverlay();
 		grap = null;
+		redrawing = false;
+	}
+	
+	public void drawOverlay() {
+		
+		AffineTransform old = grap.getTransform();
+
+		grap.translate(plotOffset.left, plotOffset.top);
+		for(int i=0;i<highlights.size();i++) {
+			HighlightData hi = highlights.get(i);
+			
+			if(hi.series.series.bars.show) {
+				drawBarHighlight(hi.series, hi.point);
+			}
+			else {
+				drawPointHighlight(hi.series, hi.point);
+			}
+		}
+		grap.setTransform(old);
+	}
+	
+	private void drawPointHighlight(SeriesData series, double[] point) {
+		if(series == null || point == null || point.length < 2) {
+			return;
+		}
+		
+		double x = point[0];
+		double y = point[1];
+		AxisData axisx = series.axes.xaxis;
+		AxisData axisy = series.axes.yaxis;
+		
+		if(x < axisx.min || x > axisx.max || y < axisy.min || y > axisy.max) {
+			return;
+		}
+		int pointRadius = series.series.points.radius + series.series.points.lineWidth / 2;
+		grap.setStroke(new BasicStroke(pointRadius));
+		grap.setColor(new Color(series.series.color | 0x80000000, true));
+		double radius = 1.5 * pointRadius;
+		grap.drawArc((int)(axisx.p2c.format(x) - radius), (int)(axisy.p2c.format(y) - radius), (int)(2 * radius), (int)(2 * radius), 0, 360);
+		
+	}
+	
+	private void drawBarHighlight(SeriesData series, double[] point) {
+		int color = series.series.color;
+		series.series.color = (series.series.color | 0x80000000);
+		double barLeft = series.series.bars.align.equals("left") ? 0 : -series.series.bars.barWidth/2;
+		drawBar(point[0], point[1], 0, barLeft, barLeft + series.series.bars.barWidth,
+				0, series.axes.xaxis, series.axes.yaxis, series);
+		series.series.color = color;		
 	}
 
 	public Object getPlaceholder() {
@@ -1495,7 +1706,7 @@ public class FlotDraw implements Serializable {
 	}
 
 	public Object getCanvas() {
-		return canvas;
+		return grap;
 	}
 
 	public RectOffset getPlotOffset() {
@@ -1526,12 +1737,45 @@ public class FlotDraw implements Serializable {
 		return options;
 	}
 
-	public void highlight() {
-
+	public void highlight(SeriesData s, double[] point, String auto) {
+		int i = indexOfHighlight(s, point);
+		if(i == -1) {
+			highlights.add(new HighlightData(s, point, auto));
+			//####redraw
+		}
+		else if(auto == null || auto.length() == 0) {
+			highlights.get(i).auto = "false";
+		}
+	}
+	
+	private boolean equals(double p0, double p1) {
+		return p0 == p1 ? true : Math.abs(p0 - p1) < 0.00001;
+	}
+	
+	public int indexOfHighlight(SeriesData s, double[] point) {
+		for(int i=0;i<highlights.size();i++) {
+			HighlightData h = highlights.get(i);
+			if(h.series == s && h.point.length > 1 && point.length > 1) {
+				if(equals(h.point[0] ,point[0]) && equals(h.point[1] ,point[1])) {
+					return i;
+				}
+			}
+		}
+		return -1;
 	}
 
-	public void unhighlight() {
-
+	public void unhighlight(SeriesData s, double[] point) {
+		if(s == null && point == null) {
+			highlights.clear();
+			//###Redraw
+			return;
+		}
+		
+		int i = indexOfHighlight(s, point);
+		if(i != -1) {
+			highlights.remove(i);
+			//###Redraw
+		}
 	}
 
 	public void triggerRedrawOverlay() {

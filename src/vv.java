@@ -50,13 +50,13 @@ public class vv {
 		sd2.label = "tan(x)";
 		sds.add(sd2);		
 		
-		/*
+		
 		SeriesData sd3 = new SeriesData();
 		sd3.setData(new double[][]{{1, 1}, {3, 2.5}});
 		sd3.label = "Bars";
 		sd3.series.bars.show = true;
 		sds.add(sd3);
-		*/
+		
 		
 		Options opt = new Options();
 		Vector<TickData> ticks = new Vector<TickData>();
@@ -67,10 +67,11 @@ public class vv {
 		ticks.add(new TickData(Math.PI * 2, "2\u03c0"));
 		opt.xaxis.ticks = ticks;
 		opt.grid.backgroundColor = new int[]{0xffffff, 0xeeeeee};
+		opt.grid.hoverable = true;
 		
 		opt.yaxis.ticks = new Integer(10);
-		opt.yaxis.max = 4;
-		opt.yaxis.min = -1;
+		opt.yaxis.max = 2;
+		opt.yaxis.min = -2;
 
 		opt.series.points.show = true;
 		opt.series.lines.setShow(true);
@@ -99,7 +100,7 @@ public class vv {
 			@Override
 			public String Name() {
 				// TODO Auto-generated method stub
-				return FlotEvent.FLOTEVENT_ADD;
+				return FlotEvent.MOUSE_HOVER;
 			}
 
 			@Override
@@ -111,12 +112,12 @@ public class vv {
 		};
 		v.addEventListener(_l);
 		System.out.print("add");
-		v.dispatchEvent(FlotEvent.FLOTEVENT_ADD, new FlotEvent(v));
+		v.dispatchEvent(FlotEvent.MOUSE_HOVER, new FlotEvent(v));
 		v.dispatchEvent("vv", new FlotEvent(v));
-		v.dispatchEvent(FlotEvent.FLOTEVENT_ADD, new FlotEvent(v));
+		v.dispatchEvent(FlotEvent.MOUSE_HOVER, new FlotEvent(v));
 		v.removeEventListener(_l);
-		v.dispatchEvent(FlotEvent.FLOTEVENT_ADD, new FlotEvent(v));
-		v.dispatchEvent(FlotEvent.FLOTEVENT_ADD, new FlotEvent(v));
+		v.dispatchEvent(FlotEvent.MOUSE_HOVER, new FlotEvent(v));
+		v.dispatchEvent(FlotEvent.MOUSE_HOVER, new FlotEvent(v));
 	}
 
 }
