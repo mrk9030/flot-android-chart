@@ -3,9 +3,6 @@ package com.flotandroidchart.global;
 import java.util.EventObject;
 
 public class FlotEvent extends EventObject {
-
-	public static final String FLOTEVENT_ADD = "mouse";
-	
 	
 	public static final String HOOK_PROCESSOPTIONS = "processOptions";
 	public static final String HOOK_PROCESSRAWDATA = "processRawData";
@@ -14,6 +11,11 @@ public class FlotEvent extends EventObject {
 	public static final String HOOK_BINDEVENTS = "bindEvents";
 	public static final String HOOK_DRAWOVERLAY = "drawOverlay";
 
+	public static final String MOUSE_HOVER = "hover";
+	public static final String MOUSE_CLICK = "click";
+	
+	public static final String CANVAS_REPAINT = "repaint";
+	
 	public FlotEvent(Object source) {
 		super(source);
 		// TODO Auto-generated constructor stub

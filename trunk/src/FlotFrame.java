@@ -1,14 +1,20 @@
 import java.awt.Canvas;
-import java.awt.Color;
+import java.awt.Container;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GridLayout;
 import java.awt.RenderingHints;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
 
 
 import com.flotandroidchart.flot.FlotDraw;
+import com.flotandroidchart.global.FlotEvent;
+import com.flotandroidchart.global.FlotEventListener;
 
-public class FlotFrame extends Canvas {
+public class FlotFrame extends Container {
 
 	/**
 	 * 
@@ -18,6 +24,9 @@ public class FlotFrame extends Canvas {
 
 	public FlotFrame(FlotDraw fd) {
 		_fd = fd;
+		this.setLayout(new GridLayout(1, 1));
+		FlotOverlay fol = new FlotOverlay(_fd.getEventHolder());
+		add(fol);
 	}
 
 	public void paint(Graphics g) {
