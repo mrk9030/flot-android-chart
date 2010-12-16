@@ -1,3 +1,20 @@
+/*
+Copyright 2010 Kxu
+Copyright 2010 TheChatrouletteGirls.Com.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package com.flotandroidchart.flot;
 
 import java.awt.BasicStroke;
@@ -10,13 +27,10 @@ import java.awt.Paint;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
-import java.awt.geom.RoundRectangle2D;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.Vector;
 
 import com.flotandroidchart.flot.data.AxisData;
@@ -51,10 +65,6 @@ public class FlotDraw implements Serializable {
 
 	private Options options;
 
-	private Object canvas;
-
-	private Object overlay;
-	
 	private EventHolder hookHolder;
 
 	private EventHolder eventHolder;
@@ -68,7 +78,6 @@ public class FlotDraw implements Serializable {
 	private int plotWidth;
 	private int plotHeight;
 
-	private Object hooks;
 	public FlotDraw(Object _canvas, Vector<SeriesData> _data, Options _options,
 			Object _plugins) {
 		series = _data;
@@ -102,7 +111,7 @@ public class FlotDraw implements Serializable {
 				if(event.getSource() instanceof MouseEvent){
 					MouseEvent evt = (MouseEvent)event.getSource();
 					if(evt != null){
-						executeHighlight(Name(), evt);
+						executeHighlight(Name(), evt, options.grid.hoverable);
 					}
 				}
 			}
@@ -125,7 +134,7 @@ public class FlotDraw implements Serializable {
 				if(event.getSource() instanceof MouseEvent){
 					MouseEvent evt = (MouseEvent)event.getSource();
 					if(evt != null){	
-						executeHighlight(Name(), evt);
+						executeHighlight(Name(), evt, options.grid.clickable);
 					}
 				}
 			}
@@ -138,12 +147,12 @@ public class FlotDraw implements Serializable {
 		// setupGrid();
 	}
 	
-	private void executeHighlight(String name, MouseEvent evt) {
+	private void executeHighlight(String name, MouseEvent evt, boolean hover) {
 
 		double canvasX = evt.getX() - plotOffset.left;
 		double canvasY = evt.getY() - plotOffset.top;
 		
-		NearItemData item = findNearbyItem(canvasX, canvasY);
+		NearItemData item = findNearbyItem(canvasX, canvasY, hover);
 				
 		if(options.grid.autoHighlight) {
 			boolean _redraw = false;
@@ -170,17 +179,17 @@ public class FlotDraw implements Serializable {
 	}
 	
 	public NearItemData findNearbyItem(double mouseX,
-			                            double mouseY) {
+			                            double mouseY,
+			                            boolean hover) {
 		int maxDistance = options.grid.mouseActiveRadius;
 		double smallestDistance = maxDistance * maxDistance + 1;
 		int[] item = null;
-		boolean foundPoint = false;
 		int i,j;
 		
 		for(i=0;i<series.size();i++) {
 			SeriesData s = series.get(i);
 			
-			if(!options.grid.hoverable) {
+			if(!hover) {
 				continue;
 			}
 			AxisData axisx = s.axes.xaxis;
@@ -372,8 +381,6 @@ public class FlotDraw implements Serializable {
 			int ps = sd.datapoints.pointsize;
 			Vector<Double> points = sd.datapoints.points;
 
-			Boolean insertSteps = sd.series.lines.getShow()
-					&& sd.series.lines.steps;
 			sd.axes.xaxis.used = sd.axes.yaxis.used = true;
 
 			int k = 0;
@@ -1159,7 +1166,7 @@ public class FlotDraw implements Serializable {
 					Math.cos(angle) * (lw / 2 + sw / 2), currentSeries.axes.xaxis,
 					currentSeries.axes.yaxis);
 
-			BasicStroke bstroke1 = new BasicStroke(
+			new BasicStroke(
 					currentSeries.series.lines.lineWidth / 2, BasicStroke.CAP_BUTT,
 					BasicStroke.CAP_ROUND);
 			plotLine(currentSeries.datapoints, Math.sin(angle) * (lw / 2 + sw / 4),
@@ -1551,7 +1558,7 @@ public class FlotDraw implements Serializable {
 		}
 		else if(axisOption.ticks instanceof Vector) {
 			axis.ticks = new Vector<TickData>();
-			Vector<TickData> ticks = (Vector<TickData>)axisOption.ticks;
+			Vector<TickData> ticks = (Vector<TickData>)(axisOption.ticks);
 			if(ticks != null) {
 				for(int i=0;i<ticks.size();i++) {
 					String label = "";
@@ -1707,13 +1714,13 @@ public class FlotDraw implements Serializable {
 
 			GeneralPath gp = new GeneralPath();
 			
-			double startX = x + (drawLeft ? -1 : 1) * (strWidth + 40);
-			double startY = y + (drawTop ? -1 : 1) * (strHeight + 40);
+			double startX = x + (drawLeft ? -1 : 1) * (strWidth + 30);
+			double startY = y + (drawTop ? -1 : 1) * (strHeight + 20);
 			
 			gp.moveTo(startX, startY);
-			double endX = startX + (drawLeft ? 1 : -1) * (strWidth + 30);
+			double endX = startX + (drawLeft ? 1 : -1) * (strWidth + 20);
 			gp.lineTo(endX, startY);
-			double endY = startY + (drawTop ? 1 : -1) * (strHeight + 30);
+			double endY = startY + (drawTop ? 1 : -1) * (strHeight + 10);
 			gp.lineTo(endX, endY);
 			double middleX = endX + (drawLeft ? -1 : 1) * 10;
 			gp.lineTo(middleX, endY);
@@ -1733,9 +1740,9 @@ public class FlotDraw implements Serializable {
 			grap.draw(gp);
 			
 			grap.setColor(new Color(0x0));	
-			startX = startX + (drawLeft ? 0 : -1) * (strWidth + 30);
-			startY = startY + (drawTop ? 0 : -1) * (strHeight + 30);
-			drawCenteredString(tooltip, (int) startY, (int) startX, strWidth + 30, strHeight + 30);					
+			startX = startX + (drawLeft ? 0 : -1) * (strWidth + 20);
+			startY = startY + (drawTop ? 0 : -1) * (strHeight + 10);
+			drawCenteredString(tooltip, (int) startY, (int) startX, strWidth + 20, strHeight + 10);					
 		}
 		grap.setTransform(old);
 	}
