@@ -1,7 +1,25 @@
+/*
+Copyright 2010 Kxu
+Copyright 2010 TheChatrouletteGirls.Com.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 import java.util.Vector;
 
 import javax.swing.JFrame;
 
+import com.flotandroidchart.flot.FlotChartContainer;
 import com.flotandroidchart.flot.FlotDraw;
 import com.flotandroidchart.flot.Options;
 import com.flotandroidchart.flot.data.AxisData;
@@ -67,7 +85,7 @@ public class vv {
 		ticks.add(new TickData(Math.PI * 2, "2\u03c0"));
 		opt.xaxis.ticks = ticks;
 		opt.grid.backgroundColor = new int[]{0xffffff, 0xeeeeee};
-		opt.grid.hoverable = true;
+		opt.grid.clickable = true;
 		
 		opt.yaxis.ticks = new Integer(10);
 		opt.yaxis.max = 2;
@@ -78,7 +96,7 @@ public class vv {
 
 		FlotDraw fd = new FlotDraw(null, sds, opt, null);
 
-		FlotFrame f = new FlotFrame(fd);
+		FlotChartContainer f = new FlotChartContainer(fd);
 		f.setBounds(0, 0, 320, 480);
 		JFrame frame = new JFrame();
 		frame.add(f);
