@@ -16,24 +16,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import java.awt.Component;
-import java.awt.Graphics;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
+
+import android.content.Context;
+import android.view.View;
 
 import com.flotandroidchart.global.EventHolder;
 import com.flotandroidchart.global.FlotEvent;
 import com.flotandroidchart.global.FlotEventListener;
 
 
-public class FlotOverlay extends Component {
+public class FlotOverlay extends View {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 	public EventHolder eventHolder;
-	public FlotOverlay(EventHolder evt) {
+	public FlotOverlay(Context context, EventHolder evt) {
+		super(context);
 		eventHolder = evt;
 		eventHolder.addEventListener(new FlotEventListener(){
 
@@ -46,11 +45,14 @@ public class FlotOverlay extends Component {
 			@Override
 			public void execute(FlotEvent event) {
 				// TODO Auto-generated method stub
+				/*
 				repaint();
+				*/
 			}
 			
 		});
 
+		/*
 		this.addMouseMotionListener(new MouseMotionListener(){
 
 			@Override
@@ -100,9 +102,6 @@ public class FlotOverlay extends Component {
 			}
 			
 		});
-	}
-	
-	public void paint(Graphics g) {
-		
+		*/
 	}
 }

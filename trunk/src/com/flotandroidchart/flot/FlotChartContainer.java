@@ -1,4 +1,13 @@
 package com.flotandroidchart.flot;
+
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
+import android.os.Handler;
+import android.view.View;
+
 /*
 Copyright 2010 Kxu
 Copyright 2010 TheChatrouletteGirls.Com.
@@ -16,12 +25,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import java.awt.Container;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GridLayout;
-import java.awt.RenderingHints;
 
 /**
  * AWT Control to draw Flot Chart on Java GUI or Applet. 
@@ -35,26 +38,27 @@ import java.awt.RenderingHints;
  * 
  *
  */
-public class FlotChartContainer extends Container {
+public class FlotChartContainer extends View {
 
 	private static final long serialVersionUID = 1L;
 	private FlotDraw _fd;
+	private Rect mRect = new Rect();
+	private Handler mHandler;
 
-	public FlotChartContainer(FlotDraw fd) {
+	public FlotChartContainer(Context context, FlotDraw fd) {
+		super(context);
 		_fd = fd;
-		this.setLayout(new GridLayout(1, 1));
-		FlotOverlay fol = new FlotOverlay(_fd.getEventHolder());
-		add(fol);
+		//FlotOverlay fol = new FlotOverlay(_fd.getEventHolder());
+		//add(fol);
+		this.mHandler = new Handler();
 	}
-
-	public void paint(Graphics g) {
-		Graphics2D g2 = (Graphics2D) g;
-
-		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-				RenderingHints.VALUE_ANTIALIAS_ON);
-
-		_fd.draw(g2, this.getWidth(), this.getHeight(), new Font(
-				Font.SANS_SERIF, Font.PLAIN, 12));
+	
+	protected void onDraw(Canvas paramCanvas) {
+		super.onDraw(paramCanvas);
+		paramCanvas.getClipBounds(mRect);
+		Paint paint = new Paint();
+		paint.setColor(Color.WHITE);
+		paramCanvas.drawRect(mRect, paint);
+		_fd.draw(paramCanvas, mRect.width(), mRect.height());
 	}
-
 }

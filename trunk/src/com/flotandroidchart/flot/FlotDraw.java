@@ -17,6 +17,7 @@ limitations under the License.
 
 package com.flotandroidchart.flot;
 
+/*
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
@@ -26,12 +27,22 @@ import java.awt.LinearGradientPaint;
 import java.awt.Paint;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.GeneralPath;
+import java.awt.geom.GeneralPath;*/
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
+
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.LinearGradient;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.RectF;
+import android.graphics.Shader;
+import android.graphics.Paint.FontMetrics;
+import android.graphics.Paint.Style;
 
 import com.flotandroidchart.flot.data.AxisData;
 import com.flotandroidchart.flot.data.Datapoints;
@@ -77,6 +88,7 @@ public class FlotDraw implements Serializable {
 	private int canvasHeight;
 	private int plotWidth;
 	private int plotHeight;
+	private Paint labelPaint;
 
 	public FlotDraw(Object _canvas, Vector<SeriesData> _data, Options _options,
 			Object _plugins) {
@@ -94,6 +106,10 @@ public class FlotDraw implements Serializable {
 		axes.y2axis = new AxisData();
 		hookHolder = new EventHolder();
 		eventHolder = new EventHolder();
+		labelPaint = getAnti();
+		labelPaint.setAntiAlias(true);
+		labelPaint.setTextSize(10);
+		labelPaint.setColor(Color.BLACK);
 		eventHolder.addEventListener(new FlotEventListener(){
 
 			@Override
@@ -108,12 +124,13 @@ public class FlotDraw implements Serializable {
 				if(redrawing) {
 					return;
 				}
+				/*
 				if(event.getSource() instanceof MouseEvent){
 					MouseEvent evt = (MouseEvent)event.getSource();
 					if(evt != null){
 						executeHighlight(Name(), evt, options.grid.hoverable);
 					}
-				}
+				}*/
 			}
 			
 		});
@@ -131,12 +148,14 @@ public class FlotDraw implements Serializable {
 				if(redrawing) {
 					return;
 				}
+				/*
 				if(event.getSource() instanceof MouseEvent){
 					MouseEvent evt = (MouseEvent)event.getSource();
 					if(evt != null){	
 						executeHighlight(Name(), evt, options.grid.clickable);
 					}
 				}
+				*/
 			}
 			
 		});
@@ -147,6 +166,7 @@ public class FlotDraw implements Serializable {
 		// setupGrid();
 	}
 	
+	/*
 	private void executeHighlight(String name, MouseEvent evt, boolean hover) {
 
 		double canvasX = evt.getX() - plotOffset.left;
@@ -177,6 +197,7 @@ public class FlotDraw implements Serializable {
 		}
 
 	}
+	*/
 	
 	public NearItemData findNearbyItem(double mouseX,
 			                            double mouseY,
@@ -596,20 +617,22 @@ public class FlotDraw implements Serializable {
 	}
 
 	private void drawGrid() {
-		AffineTransform old = grap.getTransform();
+		grap.save();
 
 		grap.translate(plotOffset.left, plotOffset.top);
 		
 		if(options.grid.backgroundColor != null) {
-			grap.setPaint(getColorOrGradient(options.grid.backgroundColor, plotHeight, 0, 0xffffff));
-			grap.fillRect(0, 0, plotWidth, plotHeight);
+			Paint p = getColorOrGradient(options.grid.backgroundColor, plotHeight, 0, 0xffffff);
+			p.setStyle(Style.FILL);
+			drawRect(grap, 0, 0, plotWidth, plotHeight, p);
 		}
 		
+		Paint p = getAnti();
+		p.setColor(getTranColor(options.grid.tickColor));
+		p.setStyle(Style.STROKE);
+		p.setStrokeWidth(1);
 		
-		grap.setColor(getTranColor(options.grid.tickColor));
-		grap.setStroke(new BasicStroke(1, BasicStroke.CAP_BUTT,
-				BasicStroke.CAP_ROUND));
-		GeneralPath shape = new GeneralPath();
+		Path shape = new Path();
 		AxisData axis = axes.xaxis;
 		if (axis.used) {
 			for (int i = 0; i < axis.ticks.size(); i++) {
@@ -617,8 +640,8 @@ public class FlotDraw implements Serializable {
 				if (v < axis.datamin || v > axis.datamax) {
 					continue;
 				}
-				shape.moveTo(Math.floor(axis.p2c.format(v)) + .5, 0);
-				shape.lineTo(Math.floor(axis.p2c.format(v)) + .5, plotHeight);
+				shape.moveTo((float) (Math.floor(axis.p2c.format(v)) + .5), 0.0f);
+				shape.lineTo((float) (Math.floor(axis.p2c.format(v)) + .5), plotHeight);
 				// grap.drawLine((int)(Math.floor(axis.p2c.format(v)) + .5), 0,
 				// (int)(Math.floor(axis.p2c.format(v)) + .5), plotHeight);
 			}
@@ -631,8 +654,8 @@ public class FlotDraw implements Serializable {
 				if (v < axis.datamin || v > axis.datamax) {
 					continue;
 				}
-				shape.moveTo(0, Math.floor(axis.p2c.format(v)) + .5);
-				shape.lineTo(plotWidth, Math.floor(axis.p2c.format(v)) + .5);
+				shape.moveTo(0, (float) (Math.floor(axis.p2c.format(v)) + .5));
+				shape.lineTo(plotWidth, (float) (Math.floor(axis.p2c.format(v)) + .5));
 				// grap.drawLine(0, (int)(Math.floor(axis.p2c.format(v)) + .5),
 				// plotWidth, (int)(Math.floor(axis.p2c.format(v)) + .5));
 			}
@@ -645,8 +668,8 @@ public class FlotDraw implements Serializable {
 				if (v < axis.datamin || v > axis.datamax) {
 					continue;
 				}
-				shape.moveTo(Math.floor(axis.p2c.format(v)) + .5, -5);
-				shape.lineTo(Math.floor(axis.p2c.format(v)) + .5, 5);
+				shape.moveTo((float) (Math.floor(axis.p2c.format(v)) + .5), -5);
+				shape.lineTo((float) (Math.floor(axis.p2c.format(v)) + .5), 5);
 				// grap.drawLine((int)(Math.floor(axis.p2c.format(v)) + .5), -5,
 				// (int)(Math.floor(axis.p2c.format(v)) + .5), 5);
 			}
@@ -661,35 +684,34 @@ public class FlotDraw implements Serializable {
 				}
 				shape
 						.moveTo(plotWidth - 5,
-								Math.floor(axis.p2c.format(v)) + .5);
+								(float) (Math.floor(axis.p2c.format(v)) + .5));
 				shape
 						.lineTo(plotWidth + 5,
-								Math.floor(axis.p2c.format(v)) + .5);
+								(float) (Math.floor(axis.p2c.format(v)) + .5));
 				// grap.drawLine(plotWidth - 5,
 				// (int)(Math.floor(axis.p2c.format(v)) + .5), plotWidth+5,
 				// (int)(Math.floor(axis.p2c.format(v)) + .5));
 			}
 		}
 
-		grap.draw(shape);
-
-		grap.setColor(getTranColor(options.grid.borderColor));
-		grap.setStroke(new BasicStroke(options.grid.borderWidth,
-				BasicStroke.CAP_BUTT, BasicStroke.CAP_ROUND));
+		grap.drawPath(shape, p);
 		if (options.grid.borderWidth > 0) {
+			p = getAnti();
+			p.setColor(getTranColor(options.grid.borderColor));
+			p.setStrokeWidth(options.grid.borderWidth);
+			p.setStyle(Style.STROKE);
+
 			int bw = options.grid.borderWidth;
-			grap.drawRect(-bw / 2, -bw / 2, plotWidth + bw, plotHeight + bw);
+			drawRect(grap, -bw / 2, -bw / 2, plotWidth + bw, plotHeight + bw, p);
 		}
 
-		grap.setTransform(old);
+		grap.restore();
 	}
 
 	private void insertLabels() {
 		// TODO Auto-generated method stub
 		final int margin = options.grid.labelMargin + options.grid.borderWidth;
 
-		grap.setColor(Color.black);
-		grap.setFont(defaultFont);
 		if (axes.xaxis.used) {
 			addLabels(axes.xaxis, new DrawFormatter() {
 
@@ -721,8 +743,8 @@ public class FlotDraw implements Serializable {
 	}
 
 	private void plotLine(Datapoints datapoints, double xoffset,
-			double yoffset, AxisData axisx, AxisData axisy) {
-		GeneralPath shape = new GeneralPath();
+			double yoffset, AxisData axisx, AxisData axisy, Paint p) {
+		Path shape = new Path();
 		Vector<Double> points = datapoints.points;
 		int ps = datapoints.pointsize;
 		double prevx = Double.MIN_VALUE;
@@ -791,17 +813,17 @@ public class FlotDraw implements Serializable {
 			}
 
 			if (x1 != prevx || y1 != prevy)
-				shape.moveTo(axisx.p2c.format(x1) + xoffset, axisy.p2c
+				shape.moveTo((float)(axisx.p2c.format(x1) + xoffset), (float)(axisy.p2c
 						.format(y1)
-						+ yoffset);
+						+ yoffset));
 
 			prevx = x2;
 			prevy = y2;
-			shape.lineTo(axisx.p2c.format(x2) + xoffset, axisy.p2c.format(y2)
-					+ yoffset);
+			shape.lineTo((float)(axisx.p2c.format(x2) + xoffset), (float)(axisy.p2c.format(y2)
+					+ yoffset));
 		}
 
-		grap.draw(shape);
+		grap.drawPath(shape, p);
 	}
 	
 	private Paint getFillStyle(boolean filloptions, Object fillColor, int seriesColor, double bottom, double top){
@@ -811,32 +833,40 @@ public class FlotDraw implements Serializable {
 		if(fillColor != null) {
 			return getColorOrGradient(fillColor, bottom, top, seriesColor);
 		}
-		return new Color(seriesColor | 0x66000000, true);
+		Paint p = getAnti();
+		
+		p.setColor(seriesColor | 0x66000000);
+		return p;
 	}
 	
 	private Paint getColorOrGradient(Object spec, double bottom, double top, int defaultColor) {
+		Paint p = getAnti();
 		if(spec instanceof Integer) {
-			return getTranColor(((Integer)spec).intValue());
+			p.setColor(getTranColor(((Integer)spec).intValue()));
+			return p;
 		}
 		else if(spec instanceof int[]){
 			int[] specColors = (int[])spec;
 			if(specColors != null) {
 				float[] dist = new float[specColors.length];
-				Color[] colors = new Color[specColors.length];
+				int[] colors = new int[specColors.length];
 				
 				for(int i=0;i<specColors.length;i++) {
 					dist[i] = i/(specColors.length - 1.0f);
 					colors[i] = getTranColor(specColors[i]);
 				}
 				
-				return new LinearGradientPaint(0.0f, (float)top, (float)0, (float)bottom, dist, colors);
+				p.setShader(new LinearGradient(0.0f, (float)top, (float)0, (float)bottom, colors, dist, Shader.TileMode.MIRROR));
+				
+				//return new LinearGradientPaint(0.0f, (float)top, (float)0, (float)bottom, dist, colors);
 			}
 		}
-		return getTranColor(defaultColor);
+		p.setColor(getTranColor(defaultColor));
+		return p;
 	}
 	
-	private Color getTranColor(int rgba){
-		return new Color(rgba, ((rgba >> 24) != 0));
+	private int getTranColor(int rgba){
+		return ((rgba >> 24) != 0) ? rgba : (rgba | 0xff000000);
 	}
 	
 	private boolean redrawing = true;
@@ -870,8 +900,8 @@ public class FlotDraw implements Serializable {
 		if(!options.legend.show) {
 			return;
 		}
-		FontMetrics fm = grap.getFontMetrics();
-		int max = 0;
+		FontMetrics fm = labelPaint.getFontMetrics();
+		float max = 0;
 		int cnt = 0;
 		for(int i=0;i<series.size();i++) {
 			SeriesData s = series.get(i);
@@ -882,7 +912,7 @@ public class FlotDraw implements Serializable {
 			if(label == null || label.length() == 0) {
 				continue;
 			}
-			int labelWdt = fm.stringWidth(label);
+			int labelWdt = (int) labelPaint.measureText(label);
 			if(labelWdt > max) {
 				max = labelWdt;
 			}
@@ -890,16 +920,23 @@ public class FlotDraw implements Serializable {
 		}
 		if(cnt == 0)
 			return;
-		int width = max + 20;
-		int height = (fm.getHeight() > 16 ? fm.getHeight() : 16)+4;
+		float width = max + 20;
+		float height = (labelPaint.getTextSize() > 16 ? labelPaint.getTextSize() : 16)+4;
 		int nWidth = Math.min(cnt, options.legend.noColumns);
 		int nHeight = cnt / options.legend.noColumns + (cnt % options.legend.noColumns == 0 ? 0 : 1);
 		
-		AffineTransform old = grap.getTransform();
+		grap.save();
 
 		grap.translate(plotOffset.left + plotWidth - nWidth * width - 10, plotOffset.top + 10);
-		grap.setColor(new Color(0xddffffff, true));
-		grap.fillRect(0, 0, nWidth * width, height * nHeight);
+		Paint p = getAnti();
+		p.setColor(Color.WHITE);
+		p.setStyle(Style.FILL);
+		drawRect(grap, 0, 0, nWidth * width, height * nHeight, p);
+		
+		p = getAnti();
+		p.setColor(0xffcccccc);
+		p.setStrokeWidth(1);
+		p.setStyle(Style.STROKE);
 		
 		for(int i=0;i<series.size();i++) {
 			SeriesData s = series.get(i);
@@ -910,18 +947,21 @@ public class FlotDraw implements Serializable {
 			if(label == null || label.length() == 0) {
 				continue;
 			}
-			grap.setColor(new Color(0xcccccc));
-			grap.setStroke(new BasicStroke(1));
-			grap.drawRect(width * (i%nWidth), (height - 10)/2 + height * (i / nWidth), 14, 10);
-			
-			grap.setColor(getTranColor(s.series.color));
-			grap.fillRect(2 + width * (i%nWidth), (height - 10)/2 + height * (i/nWidth) + 2, 11, 7);
-			
-			grap.setColor(new Color(0x545454));
-			grap.drawString(label, 18 + width * (i%nWidth), (fm.getAscent() + (height - (fm.getAscent() + fm.getDescent())) / 2) + height * (i/nWidth));
+			drawRect(grap, width * (i%nWidth), (height - 10)/2 + height * (i / nWidth), 14, 10, p);
+
+			Paint p1 = getAnti();
+			p1.setColor(getTranColor(s.series.color));
+			p1.setStyle(Style.FILL);
+			drawRect(grap, 2 + width * (i%nWidth), (height - 10)/2 + height * (i/nWidth) + 2, 10, 6, p1);
+						
+			grap.drawText(label, 18 + width * (i%nWidth), height / 2 + 5 + height * (i/nWidth), labelPaint);
 		}
 		
-		grap.setTransform(old);
+		grap.restore();
+	}
+	
+	private void drawRect(Canvas ca, float left, float top, float width, float height, Paint pa) {
+		ca.drawRect(left, top, left + width, top + height, pa);
 	}
 
 	private void drawSeries(SeriesData currentSeries) {
@@ -939,7 +979,7 @@ public class FlotDraw implements Serializable {
 	}
 
 	private void drawSeriesPoints(SeriesData currentSeries) {
-		AffineTransform old = grap.getTransform();
+		grap.save();
 
 		grap.translate(plotOffset.left, plotOffset.top);
 
@@ -949,29 +989,31 @@ public class FlotDraw implements Serializable {
 
 		if (lw > 0 && sw > 0) {
 			int w = sw / 2;
-			grap.setStroke(new BasicStroke(w, BasicStroke.CAP_BUTT,
-					BasicStroke.CAP_ROUND));
-			grap.setColor(new Color(0x19000000, true));
-			plotPoints(false, currentSeries, currentSeries.datapoints, radius, w + w / 2.0,
-					180, currentSeries.axes.xaxis, currentSeries.axes.yaxis);
+			Paint p = getAnti();
+			p.setStrokeWidth(w);
+			p.setColor(0x19000000);
+			p.setStyle(Style.STROKE);
+			plotPoints(false, currentSeries, currentSeries.datapoints, radius, w + w / 2.0f,
+					180, currentSeries.axes.xaxis, currentSeries.axes.yaxis, p);
 
-			grap.setColor(new Color(0x32000000, true));
-			plotPoints(false, currentSeries, currentSeries.datapoints, radius, w / 2.0, 180,
-					currentSeries.axes.xaxis, currentSeries.axes.yaxis);
+			p.setColor(0x32000000);
+			plotPoints(false, currentSeries, currentSeries.datapoints, radius, w / 2.0f, 180,
+					currentSeries.axes.xaxis, currentSeries.axes.yaxis, p);
 		}
 
-		grap.setStroke(new BasicStroke(lw, BasicStroke.CAP_BUTT,
-				BasicStroke.CAP_ROUND));
-		grap.setColor(getTranColor(currentSeries.series.color));
+		Paint p =  getAnti();
+		p.setStrokeWidth(lw);
+		p.setColor(getTranColor(currentSeries.series.color));
+		p.setStyle(Style.STROKE);
 		plotPoints(true, currentSeries, currentSeries.datapoints, radius, 0, 360,
-				currentSeries.axes.xaxis, currentSeries.axes.yaxis);
+				currentSeries.axes.xaxis, currentSeries.axes.yaxis, p);
 
-		grap.setTransform(old);
+		grap.restore();
 	}
 
 	private void plotPoints(boolean fill, SeriesData currentSeries,
-			Datapoints datapoints, double radius, double offset,
-			int circumference, AxisData axisx, AxisData axisy) {
+			Datapoints datapoints, float radius, float offset,
+			float circumference, AxisData axisx, AxisData axisy, Paint pa) {
 		Vector<Double> points = datapoints.points;
 		int ps = datapoints.pointsize;
 
@@ -987,42 +1029,44 @@ public class FlotDraw implements Serializable {
 					currentSeries.series.points.fillColor, currentSeries.series.color, 0, 0);
 
 			if (fill && currentSeries.series.points.fill && p!=null) {
-				grap.setPaint(p);
-				grap.fillArc((int) (axisx.p2c.format(x) - radius),
-						(int) (axisy.p2c.format(y) + offset - radius),
-						(int) (2 * radius), (int) (2 * radius), 180,
-						circumference);
-				grap.setColor(getTranColor(currentSeries.series.color));
-				grap.setStroke(new BasicStroke(currentSeries.series.lines.lineWidth,
-						BasicStroke.CAP_BUTT, BasicStroke.CAP_ROUND));
-				grap.drawArc((int) (axisx.p2c.format(x) - radius),
-						(int) (axisy.p2c.format(y) + offset - radius),
-						(int) (2 * radius), (int) (2 * radius), 180,
-						circumference);
+				p.setStyle(Style.FILL);
+				grap.drawArc(getRectF((float) (axisx.p2c.format(x) - radius),
+						(float) (axisy.p2c.format(y) + offset - radius),
+						(float) (2 * radius), (float) (2 * radius)), 180,
+						circumference, false, p);
+				p = getAnti();
+				
+				p.setColor(getTranColor(currentSeries.series.color));
+				p.setStrokeWidth(currentSeries.series.lines.lineWidth);
+				p.setStyle(Style.STROKE);
+				grap.drawArc(getRectF((float) (axisx.p2c.format(x) - radius),
+						(float) (axisy.p2c.format(y) + offset - radius),
+						(float) (2 * radius), (float) (2 * radius)), 180,
+						circumference, false, p);
 				continue;
 			}
-			grap.drawArc((int) (axisx.p2c.format(x) - radius), (int) (axisy.p2c
+			grap.drawArc(getRectF((float) (axisx.p2c.format(x) - radius), (float) (axisy.p2c
 					.format(y)
-					+ offset - radius), (int) (2 * radius), (int) (2 * radius),
-					180, circumference);
+					+ offset - radius), (float) (2 * radius), (float) (2 * radius)),
+					180, circumference, false, pa);
 		}
 	}
 
 	private void drawSeriesBars(SeriesData currentSeries) {
-		AffineTransform old = grap.getTransform();
+		grap.save();
 
 		grap.translate(plotOffset.left, plotOffset.top);
 
-		double barLeft = currentSeries.series.bars.align.equals("left") ? 0
+		float barLeft = currentSeries.series.bars.align.equals("left") ? 0
 				: -currentSeries.series.bars.barWidth / 2;
 		plotBars(currentSeries, currentSeries.datapoints, barLeft, barLeft
 				+ currentSeries.series.bars.barWidth, 0, currentSeries.axes.xaxis,
 				currentSeries.axes.yaxis);
-		grap.setTransform(old);
+		grap.restore();
 	}
 
 	private void plotBars(SeriesData currentSeries, Datapoints datapoints,
-			double barLeft, double barRight, double offset, AxisData axisx,
+			float barLeft, float barRight, float offset, AxisData axisx,
 			AxisData axisy) {
 		Vector<Double> points = datapoints.points;
 		int ps = datapoints.pointsize;
@@ -1031,15 +1075,15 @@ public class FlotDraw implements Serializable {
 			if (Double.isNaN(points.get(i))) {
 				continue;
 			}
-			drawBar(points.get(i), points.get(i + 1), points.get(i + 2),
+			drawBar(points.get(i).floatValue(), points.get(i + 1).floatValue(), points.get(i + 2).floatValue(),
 					barLeft, barRight, offset, axisx, axisy, currentSeries);
 		}
 	}
 
-	private void drawBar(double x, double y, double b, double barLeft,
-			double barRight, double offset, AxisData axisx, AxisData axisy,
+	private void drawBar(float x, float y, float b, float barLeft,
+			float barRight, float offset, AxisData axisx, AxisData axisy,
 			SeriesData currentSeries) {
-		double left, right, bottom, top, tmp;
+		float left, right, bottom, top, tmp;
 		boolean drawLeft, drawRight, drawBottom, drawTop;
 
 		if (currentSeries.series.bars.horizontal) {
@@ -1083,49 +1127,50 @@ public class FlotDraw implements Serializable {
 			return;
 
 		if (left < axisx.min) {
-			left = axisx.min;
+			left = (float) axisx.min;
 			drawLeft = false;
 		}
 
 		if (right > axisx.max) {
-			right = axisx.max;
+			right = (float) axisx.max;
 			drawRight = false;
 		}
 
 		if (bottom < axisy.min) {
-			bottom = axisy.min;
+			bottom = (float) axisy.min;
 			drawBottom = false;
 		}
 
 		if (top > axisy.max) {
-			top = axisy.max;
+			top = (float) axisy.max;
 			drawTop = false;
 		}
 
-		left = axisx.p2c.format(left);
-		bottom = axisy.p2c.format(bottom);
-		right = axisx.p2c.format(right);
-		top = axisy.p2c.format(top);
+		left = (float) axisx.p2c.format(left);
+		bottom = (float) axisy.p2c.format(bottom);
+		right = (float) axisx.p2c.format(right);
+		top = (float) axisy.p2c.format(top);
 
-		GeneralPath c = new GeneralPath();
+		Path c = new Path();
 		Paint p = this.getFillStyle(currentSeries.series.bars.fill, currentSeries.series.bars.fillColor, currentSeries.series.color, bottom, top);
-		if (currentSeries.series.bars.fill) {
-			grap.setPaint(p);
+		if (p != null && currentSeries.series.bars.fill) {
 			c.moveTo(left, bottom);
 			c.lineTo(left, top);
 			c.lineTo(right, top);
 			c.lineTo(right, bottom);
-			grap.fill(c);
+			p.setStyle(Style.FILL);
+			grap.drawPath(c, p);
 
 			c.reset();
 		}
 
 		// draw outline
 		if (drawLeft || drawRight || drawTop || drawBottom) {
-			BasicStroke bstroke = new BasicStroke(currentSeries.series.bars.barWidth,
-					BasicStroke.CAP_BUTT, BasicStroke.CAP_ROUND);
-			grap.setStroke(bstroke);
-			grap.setColor(getTranColor(currentSeries.series.color));
+			
+			Paint p1 = getAnti();
+			p1.setStrokeWidth(currentSeries.series.bars.barWidth);
+			p1.setColor(getTranColor(currentSeries.series.color));
+			p1.setStyle(Style.STROKE);
 
 			// FIXME: inline moveTo is buggy with excanvas
 			c.moveTo(left, bottom + offset);
@@ -1145,61 +1190,61 @@ public class FlotDraw implements Serializable {
 				c.lineTo(left, bottom + offset);
 			else
 				c.moveTo(left, bottom + offset);
-			c.closePath();
-			grap.draw(c);
+			c.close();
+			grap.drawPath(c, p1);
 		}
 	}
 
 	private void drawSeriesLines(SeriesData currentSeries) {
-		AffineTransform old = grap.getTransform();
+		grap.save();
 
 		grap.translate(plotOffset.left, plotOffset.top);
-		BasicStroke bstroke = new BasicStroke(currentSeries.series.lines.lineWidth,
-				BasicStroke.CAP_BUTT, BasicStroke.CAP_ROUND);
 		int lw = currentSeries.series.lines.lineWidth;
 		int sw = currentSeries.series.shadowSize;
 		if (lw > 0 && sw > 0) {
-			grap.setColor(new Color(0x19000000, true));
-			grap.setStroke(bstroke);
+			Paint p = getAnti();
+			p.setColor(0x19000000);
+			p.setStrokeWidth(currentSeries.series.lines.lineWidth);
+			p.setStyle(Style.STROKE);
 			double angle = Math.PI / 18;
 			plotLine(currentSeries.datapoints, Math.sin(angle) * (lw / 2 + sw / 2),
 					Math.cos(angle) * (lw / 2 + sw / 2), currentSeries.axes.xaxis,
-					currentSeries.axes.yaxis);
+					currentSeries.axes.yaxis, p);
 
-			new BasicStroke(
-					currentSeries.series.lines.lineWidth / 2, BasicStroke.CAP_BUTT,
-					BasicStroke.CAP_ROUND);
+			p.setStrokeWidth(lw / 2);
 			plotLine(currentSeries.datapoints, Math.sin(angle) * (lw / 2 + sw / 4),
 					Math.cos(angle) * (lw / 2 + sw / 4), currentSeries.axes.xaxis,
-					currentSeries.axes.yaxis);
+					currentSeries.axes.yaxis, p);
 
 		}
 
-		grap.setStroke(bstroke);
 		Paint p = this.getFillStyle(options.series.lines.fill, options.series.lines.fillColor, currentSeries.series.color, 0, plotHeight);
 		if (options.series.lines.fill && p!= null) {
-			grap.setPaint(p);
+			p.setStyle(Style.FILL);
 			plotLineArea(currentSeries.datapoints, currentSeries.axes.xaxis,
-					currentSeries.axes.yaxis);
+					currentSeries.axes.yaxis, p);
 		}
 
 		if (lw > 0) {
-			grap.setColor(getTranColor(currentSeries.series.color));
+			p = getAnti();
+			p.setColor(getTranColor(currentSeries.series.color));
+			p.setStrokeWidth(currentSeries.series.lines.lineWidth);
+			p.setStyle(Style.STROKE);
 			plotLine(currentSeries.datapoints, 0, 0, currentSeries.axes.xaxis,
-					currentSeries.axes.yaxis);
+					currentSeries.axes.yaxis, p);
 		}
-		grap.setTransform(old);
+		grap.restore();
 	}
 
 	private void plotLineArea(Datapoints datapoints, AxisData axisx,
-			AxisData axisy) {
+			AxisData axisy, Paint p) {
 		Vector<Double> points = datapoints.points;
 		int ps = datapoints.pointsize;
 		double bottom = Math.min(Math.max(0, axisy.min), axisy.max);
 		double top;
 		double lastX = 0;
 		boolean areaOpen = false;
-		GeneralPath ctx = new GeneralPath();
+		Path ctx = new Path();
 
 		for (int i = ps; i < points.size(); i += ps) {
 			double x1 = points.get(i - ps);
@@ -1209,9 +1254,9 @@ public class FlotDraw implements Serializable {
 
 			if (areaOpen && !Double.isNaN(x1) && Double.isNaN(x2)) {
 				// close area
-				ctx.lineTo(axisx.p2c.format(lastX), axisy.p2c.format(bottom));
-				ctx.closePath();
-				grap.fill(ctx);
+				ctx.lineTo((float)axisx.p2c.format(lastX), (float)axisy.p2c.format(bottom));
+				ctx.close();
+				grap.drawPath(ctx, p);
 				ctx.reset();
 				areaOpen = false;
 				continue;
@@ -1251,19 +1296,19 @@ public class FlotDraw implements Serializable {
 			if (!areaOpen) {
 				// open area
 				// ctx.beginPath();
-				ctx.moveTo(axisx.p2c.format(x1), axisy.p2c.format(bottom));
+				ctx.moveTo((float)axisx.p2c.format(x1), (float)axisy.p2c.format(bottom));
 				areaOpen = true;
 			}
 
 			// now first check the case where both is outside
 			if (y1 >= axisy.max && y2 >= axisy.max) {
-				ctx.lineTo(axisx.p2c.format(x1), axisy.p2c.format(axisy.max));
-				ctx.lineTo(axisx.p2c.format(x2), axisy.p2c.format(axisy.max));
+				ctx.lineTo((float)axisx.p2c.format(x1), (float)axisy.p2c.format(axisy.max));
+				ctx.lineTo((float)axisx.p2c.format(x2), (float)axisy.p2c.format(axisy.max));
 				lastX = x2;
 				continue;
 			} else if (y1 <= axisy.min && y2 <= axisy.min) {
-				ctx.lineTo(axisx.p2c.format(x1), axisy.p2c.format(axisy.min));
-				ctx.lineTo(axisx.p2c.format(x2), axisy.p2c.format(axisy.min));
+				ctx.lineTo((float)axisx.p2c.format(x1), (float)axisy.p2c.format(axisy.min));
+				ctx.lineTo((float)axisx.p2c.format(x2), (float)axisy.p2c.format(axisy.min));
 				lastX = x2;
 				continue;
 			}
@@ -1301,13 +1346,13 @@ public class FlotDraw implements Serializable {
 				else
 					top = axisy.max;
 
-				ctx.lineTo(axisx.p2c.format(x1old), axisy.p2c.format(top));
-				ctx.lineTo(axisx.p2c.format(x1), axisy.p2c.format(top));
+				ctx.lineTo((float)axisx.p2c.format(x1old), (float)axisy.p2c.format(top));
+				ctx.lineTo((float)axisx.p2c.format(x1), (float)axisy.p2c.format(top));
 			}
 
 			// fill the triangles
-			ctx.lineTo(axisx.p2c.format(x1), axisy.p2c.format(y1));
-			ctx.lineTo(axisx.p2c.format(x2), axisy.p2c.format(y2));
+			ctx.lineTo((float)axisx.p2c.format(x1), (float)axisy.p2c.format(y1));
+			ctx.lineTo((float)axisx.p2c.format(x2), (float)axisy.p2c.format(y2));
 
 			// fill the other rectangle if it's there
 			if (x2 != x2old) {
@@ -1316,16 +1361,16 @@ public class FlotDraw implements Serializable {
 				else
 					top = axisy.max;
 
-				ctx.lineTo(axisx.p2c.format(x2), axisy.p2c.format(top));
-				ctx.lineTo(axisx.p2c.format(x2old), axisy.p2c.format(top));
+				ctx.lineTo((float)axisx.p2c.format(x2), (float)axisy.p2c.format(top));
+				ctx.lineTo((float)axisx.p2c.format(x2old), (float)axisy.p2c.format(top));
 			}
 
 			lastX = Math.max(x2, x2old);
 		}
 
 		if (areaOpen) {
-			ctx.lineTo(axisx.p2c.format(lastX), axisy.p2c.format(bottom));
-			grap.fill(ctx);
+			ctx.lineTo((float)axisx.p2c.format(lastX), (float)axisy.p2c.format(bottom));
+			grap.drawPath(ctx, p);
 		}
 	}
 
@@ -1339,23 +1384,20 @@ public class FlotDraw implements Serializable {
 		}
 	}
 
-	private void drawCenteredString(String str, int top, int left, int width,
-			int height) {
-		FontMetrics fm = grap.getFontMetrics();
-		int x = left + (width - fm.stringWidth(str)) / 2;
-		int y = top
-				+ (fm.getAscent() + (height - (fm.getAscent() + fm.getDescent())) / 2)
-				- 2;
-		grap.drawString(str, x, y);
+	private void drawCenteredString(String str, float top, float left, float width,
+			float height) {		
+		//FontMetrics fm = labelPaint.getFontMetrics();
+		float x = left + (width - labelPaint.measureText(str)) / 2;
+		float y = top + 5;
+		grap.drawText(str, x, y, labelPaint);
 	}
 
 	private void drawRightString(String str, int top, int left, int width,
 			int height) {
-		FontMetrics fm = grap.getFontMetrics();
-		int x = left + (width - fm.stringWidth(str));
-		int y = top
-				+ (fm.getAscent() + (height - (fm.getAscent() + fm.getDescent())) / 2);
-		grap.drawString(str, x, y);
+		FontMetrics fm = labelPaint.getFontMetrics();
+		float x = left + (width - labelPaint.measureText(str));
+		float y = top + height / 2;
+		grap.drawText(str, x, y, labelPaint);
 	}
 
 	private void setTransformationHelpers(AxisData axis, AxisOption axisOption) {
@@ -1509,7 +1551,7 @@ public class FlotDraw implements Serializable {
 		axis.labelWidth = axisOption.labelWidth;
 		axis.labelHeight = axisOption.labelHeight;
 
-		FontMetrics fm = grap.getFontMetrics(defaultFont);
+		FontMetrics fm = labelPaint.getFontMetrics();
 
 		if (axis == axes.xaxis || axis == axes.x2axis) {
 			if (axis.labelWidth == -1) {
@@ -1519,12 +1561,12 @@ public class FlotDraw implements Serializable {
 			}
 			if (axis.labelHeight == -1) {
 
-				axis.labelHeight = fm.getHeight();
+				axis.labelHeight = labelPaint.getTextSize();
 			}
 		} else if (axis.labelWidth == -1 || axis.labelHeight == -1) {
 			int max = 0;
 			for (int i = 0; i < axis.ticks.size(); i++) {
-				int c_max = fm.stringWidth(axis.ticks.get(i).label);
+				int c_max = (int) labelPaint.measureText(axis.ticks.get(i).label);
 				if (c_max > max) {
 					max = c_max;
 				}
@@ -1661,26 +1703,33 @@ public class FlotDraw implements Serializable {
 
 	}
 
-	Graphics2D grap = null;
-	Font defaultFont = null;
+	Canvas grap = null;
+	//Font defaultFont = null;
 	Vector<HighlightData> highlights = new Vector<HighlightData>();
 
-	public void draw(Graphics2D g, int width, int height, Font font) {
+	public void draw(Canvas g, int width, int height) {
 		redrawing = true;
 		grap = g;
 		canvasWidth = width;
 		canvasHeight = height;
-		defaultFont = font;
+		//defaultFont = font;
 		setupGrid();
+		/*
+		setupGrid();
+		drawGrid();
+		if (options.grid.show) {
+			insertLabels();
+		}
+		insertLegend();*/
 		draw();
-		drawOverlay();
+		//drawOverlay();
 		grap = null;
 		redrawing = false;
 	}
 	
 	public void drawOverlay() {
 		
-		AffineTransform old = grap.getTransform();
+		grap.save();
 
 		grap.translate(plotOffset.left, plotOffset.top);
 		for(int i=0;i<highlights.size();i++) {
@@ -1689,11 +1738,11 @@ public class FlotDraw implements Serializable {
 			SeriesData s = hi.series;
 			AxisData axisx = s.axes.xaxis;
 			AxisData axisy = s.axes.yaxis;
-			double x = axisx.p2c.format(hi.point[0]);
-			double y = axisy.p2c.format(hi.point[1]);
+			float x = (float) axisx.p2c.format(hi.point[0]);
+			float y = (float) axisy.p2c.format(hi.point[1]);
 			if(hi.series.series.bars.show) {
 				//x = x + (hi.series.series.bars.align.equals("left") ? (hi.series.series.bars.barWidth / 2) : 0);
-				y = axisy.p2c.format(hi.point[1]/2);
+				y = (float) axisy.p2c.format(hi.point[1]/2);
 				drawBarHighlight(hi.series, hi.point);
 			}
 			else {
@@ -1708,43 +1757,49 @@ public class FlotDraw implements Serializable {
 			
 			String tooltip = options.grid.tooltipFormatter != null ? options.grid.tooltipFormatter.format(s, hi.dataIndex) :
 				"(" + strX + "," + strY + ")";
-			FontMetrics fm = grap.getFontMetrics();
-			int strWidth = fm.stringWidth(tooltip);
-			int strHeight = fm.getHeight();
+			//FontMetrics fm = labelPaint.getFontMetrics();
+			float strWidth = labelPaint.measureText(tooltip);
+			float strHeight = labelPaint.getTextSize();
 
-			GeneralPath gp = new GeneralPath();
+			Path gp = new Path();
 			
-			double startX = x + (drawLeft ? -1 : 1) * (strWidth + 30);
-			double startY = y + (drawTop ? -1 : 1) * (strHeight + 20);
+			float startX = (float) (x + (drawLeft ? -1 : 1) * (strWidth + 30));
+			float startY = (float) (y + (drawTop ? -1 : 1) * (strHeight + 20));
 			
 			gp.moveTo(startX, startY);
-			double endX = startX + (drawLeft ? 1 : -1) * (strWidth + 20);
+			float endX = startX + (drawLeft ? 1 : -1) * (strWidth + 20);
 			gp.lineTo(endX, startY);
-			double endY = startY + (drawTop ? 1 : -1) * (strHeight + 10);
+			float endY = startY + (drawTop ? 1 : -1) * (strHeight + 10);
 			gp.lineTo(endX, endY);
-			double middleX = endX + (drawLeft ? -1 : 1) * 10;
+			float middleX = endX + (drawLeft ? -1 : 1) * 10;
 			gp.lineTo(middleX, endY);
 			gp.lineTo(x, y);
-			double middleX1 = startX + (drawLeft ? 1 : -1) * 10;
+			float middleX1 = startX + (drawLeft ? 1 : -1) * 10;
 			gp.lineTo(middleX1, endY);
 			gp.lineTo(startX, endY);
-			gp.closePath();
+			gp.close();
 
 			Paint p = this.getFillStyle(true, options.grid.tooltipFillColor, 0xffff67, strHeight+40, 0);
 			if(p != null) {
-				grap.setPaint(p);
-				grap.fill(gp);
+				p.setStyle(Style.FILL);
+				grap.drawPath(gp, p);
 			}
-			grap.setStroke(new BasicStroke(1));
-			grap.setColor(new Color(options.grid.tooltipColor));
-			grap.draw(gp);
+			p = getAnti();
+			p.setStrokeWidth(1);
+			p.setColor(getTranColor(options.grid.tooltipColor));
+			grap.drawPath(gp, p);
 			
-			grap.setColor(new Color(0x0));	
 			startX = startX + (drawLeft ? 0 : -1) * (strWidth + 20);
 			startY = startY + (drawTop ? 0 : -1) * (strHeight + 10);
 			drawCenteredString(tooltip, (int) startY, (int) startX, strWidth + 20, strHeight + 10);					
 		}
-		grap.setTransform(old);
+		grap.restore();
+	}
+	
+	private Paint getAnti() {
+		Paint p = new Paint();
+		p.setAntiAlias(true);
+		return p;
 	}
 	
 	private void drawPointHighlight(SeriesData series, double[] point) {
@@ -1761,20 +1816,26 @@ public class FlotDraw implements Serializable {
 			return;
 		}
 		int pointRadius = series.series.points.radius + series.series.points.lineWidth / 2;
-		grap.setStroke(new BasicStroke(pointRadius));
-		grap.setColor(new Color(series.series.color | 0x80000000, true));
-		double radius = 1.5 * pointRadius;
-		grap.drawArc((int)(axisx.p2c.format(x) - radius), (int)(axisy.p2c.format(y) - radius), (int)(2 * radius), (int)(2 * radius), 0, 360);
+		Paint p = getAnti();
+		
+		p.setStrokeWidth(pointRadius);
+		p.setColor(series.series.color | 0x80000000);
+		float radius = 1.5f * pointRadius;
+		grap.drawArc(getRectF((int)(axisx.p2c.format(x) - radius), (int)(axisy.p2c.format(y) - radius), (int)(2 * radius), (int)(2 * radius)), 0, 360, false, p);
 		
 		
 		
 	}
 	
+	private RectF getRectF(float x, float y, float width, float height) {		
+		return new RectF(x, y, x+width, y+height);
+	}
+	
 	private void drawBarHighlight(SeriesData series, double[] point) {
 		int color = series.series.color;
 		series.series.color = (series.series.color | 0x80000000);
-		double barLeft = series.series.bars.align.equals("left") ? 0 : -series.series.bars.barWidth/2;
-		drawBar(point[0], point[1], 0, barLeft, barLeft + series.series.bars.barWidth,
+		float barLeft = series.series.bars.align.equals("left") ? 0 : -series.series.bars.barWidth/2;
+		drawBar((float)point[0], (float)point[1], 0, barLeft, barLeft + series.series.bars.barWidth,
 				0, series.axes.xaxis, series.axes.yaxis, series);
 		series.series.color = color;		
 	}
