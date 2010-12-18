@@ -4,9 +4,6 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     >
-<TextView  
-    android:layout_width="fill_parent" 
-    android:layout_height="wrap_content" 
-    android:text="@string/hello"
-    />
+<com.flotandroidchart.flot.FlotChartContainer android:id="@+id/flotdraw" android:layout_width="fill_parent"
+    android:layout_height="fill_parent" />
 </LinearLayout>
