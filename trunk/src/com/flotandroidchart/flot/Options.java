@@ -33,6 +33,7 @@ public class Options {
 	public Series series = new Series();
 	public Grid grid = new Grid();
 	public Hashtable<String, Object> hooks = new Hashtable<String, Object>();
+	public BackgroundCanvas canvas = new BackgroundCanvas();
 
 	public Options() {
 		yaxis.autoscaleMargin = 0.02;
