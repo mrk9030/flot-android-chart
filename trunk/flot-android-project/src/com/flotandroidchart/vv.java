@@ -23,7 +23,7 @@ public class vv extends Activity {
 			pds.add(new PointData(i, Math.sin(i)));
 		}
 		sd.setData(pds);
-		sd.label = "sin(x)";
+		sd.label = "中文";
 		sds.add(sd);		 
 		
 
@@ -62,20 +62,27 @@ public class vv extends Activity {
 		ticks.add(new TickData(Math.PI * 2, "2\u03c0"));
 		opt.xaxis.ticks = ticks;
 		opt.grid.backgroundColor = new int[]{0xffffff, 0xeeeeee};
-		opt.grid.clickable = true;
+		opt.grid.hoverable = true;
 		
 		opt.yaxis.ticks = new Integer(10);
 		opt.yaxis.max = 2;
 		opt.yaxis.min = -2;
 
 		//opt.series.bars.show = true;
+		opt.series.points.show = true;
 		opt.series.lines.setShow(true);
+		opt.canvas.fill = true;
+		opt.canvas.fillColor = new int[]{0xff, 0xee};
 
 		FlotDraw fd = new FlotDraw(null, sds, opt, null);
 
-        
-        FlotChartContainer tv = new FlotChartContainer(this, fd);
-        setContentView(tv);
+
+        //FlotChartContainer tv = new FlotChartContainer(this, fd);
+        setContentView(R.layout.main);
+        FlotChartContainer tv = (FlotChartContainer)this.findViewById(R.id.flotdraw);
+        if(tv != null) {
+            tv.setDrawData(fd);
+        }
         
     }
 }
