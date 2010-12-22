@@ -36,7 +36,7 @@ public class AxisOption {
 	public int tickDecimals = -1;
 	public double tickSize = Double.MIN_VALUE;
 	public double minTickSize = Double.MIN_VALUE;
-	public Object monthNames = null;
-	public Object timeformat = null;
+	public String[] monthNames = null;
+	public String timeformat = null;
 	public Boolean twelveHourClock = false;
 }

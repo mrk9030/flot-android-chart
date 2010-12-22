@@ -1,16 +1,3 @@
-package com.flotandroidchart.flot;
-
-
-import com.flotandroidchart.global.FlotEvent;
-import com.flotandroidchart.global.FlotEventListener;
-
-import android.content.Context;
-import android.graphics.Canvas;
-import android.graphics.Rect;
-import android.os.Handler;
-import android.util.AttributeSet;
-import android.view.View;
-
 /*
 Copyright 2010 Kxu
 Copyright 2010 TheChatrouletteGirls.Com.
@@ -27,7 +14,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
+package com.flotandroidchart.flot;
+import java.awt.Container;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GridLayout;
+import java.awt.RenderingHints;
 
 /**
  * AWT Control to draw Flot Chart on Java GUI or Applet. 
@@ -41,91 +34,26 @@ limitations under the License.
  * 
  *
  */
-public class FlotChartContainer extends View {
+public class FlotChartContainer extends Container {
 
 	private static final long serialVersionUID = 1L;
 	private FlotDraw _fd;
-	private Rect mRect = new Rect();
-	private Handler mHandler;
-	
-	public FlotChartContainer(Context context, AttributeSet as) {
-		super(context, as);
-		init(null);
-	}
-	
-	
-	public void setDrawData(FlotDraw fd) {
-		init(fd);
-		repaint();
-	}
-	
-	public void init(FlotDraw fd) {
-		this._fd = fd;
-		if(_fd != null) {
-			_fd.getEventHolder().addEventListener(new FlotEventListener(){
 
-				@Override
-				public String Name() {
-					// TODO Auto-generated method stub
-					return FlotEvent.CANVAS_REPAINT;
-				}
-
-				@Override
-				public void execute(FlotEvent event) {
-					// TODO Auto-generated method stub
-
-					repaint();
-
-				}
-			});
-		}
-		
-		this.mHandler = new Handler();
-
+	public FlotChartContainer(FlotDraw fd) {
+		_fd = fd;
+		this.setLayout(new GridLayout(1, 1));
+		FlotOverlay fol = new FlotOverlay(_fd.getEventHolder());
+		add(fol);
 	}
 
-	public FlotChartContainer(Context context, FlotDraw fd) {
-		super(context);
-		init(fd);
-		/*
-		this.setOnTouchListener(new OnTouchListener(){
+	public void paint(Graphics g) {
+		Graphics2D g2 = (Graphics2D) g;
 
-			@Override
-			public boolean onTouch(View arg0, MotionEvent arg1) {
-				// TODO Auto-generated method stub
-				if(!_redraw) {
-				    _redraw = true;
-				    invalidate();
-				}
-				//_fd.getEventHolder().dispatchEvent(FlotEvent.MOUSE_HOVER, new FlotEvent(arg0));
-				return true;
-			}
-			
-		})
-		*/;
-		
-	}
-	
-	protected void onDraw(Canvas paramCanvas) {
-		super.onDraw(paramCanvas);
-		paramCanvas.getClipBounds(mRect);
-		if(_fd != null) {
-			paramCanvas.save();
-			paramCanvas.translate(mRect.left, mRect.top);
-		    _fd.draw(paramCanvas, mRect.width(), mRect.height());
-		    paramCanvas.restore();
-		}
-	}
-	
-	public void repaint() {
-		this.mHandler.post(new Runnable(){
+		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+				RenderingHints.VALUE_ANTIALIAS_ON);
 
-			@Override
-			public void run() {
-				// TODO Auto-generated method stub
-				invalidate();
-			}
-			
-		});
+		_fd.draw(g2, this.getWidth(), this.getHeight(), new Font(
+				Font.SANS_SERIF, Font.PLAIN, 12));
 	}
+
 }

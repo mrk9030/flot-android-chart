@@ -25,14 +25,14 @@ public class Options {
 
 	public int[] colors = { 0xedc240, 0xafd8f8, 0xcb4b4b, 0x4da74d, 0x9440ed };
 
-	public Legend legend = new Legend();
-	public AxisOption xaxis = new AxisOption();
-	public AxisOption yaxis = new AxisOption();
-	public AxisOption x2axis = new AxisOption();
-	public AxisOption y2axis = new AxisOption();
-	public Series series = new Series();
 	public Grid grid = new Grid();
 	public Hashtable<String, Object> hooks = new Hashtable<String, Object>();
+	public Legend legend = new Legend();
+	public Series series = new Series();
+	public AxisOption x2axis = new AxisOption();
+	public AxisOption xaxis = new AxisOption();
+	public AxisOption y2axis = new AxisOption();
+	public AxisOption yaxis = new AxisOption();
 	public BackgroundCanvas canvas = new BackgroundCanvas();
 
 	public Options() {
