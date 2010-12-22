@@ -40,4 +40,5 @@ public class AxisData {
 
 	public DoubleFormatter p2c = null;
 	public DoubleFormatter c2p = null;
+	public SpecData specSize = null;
 }
