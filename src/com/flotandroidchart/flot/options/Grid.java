@@ -38,4 +38,5 @@ public class Grid {
 	public int tooltipColor = 0x545454;
 	public Object tooltipFillColor = new Integer(0xffff67);
 	public TooltipFormatter tooltipFormatter = null;
+	public int labelColor = 0x000000;
 }
