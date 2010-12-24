@@ -28,14 +28,14 @@ public class TickGenerator {
 	public Vector<TickData> generator(AxisData axis) {
 		Vector<TickData> ticks = new Vector<TickData>();
 
-		double start = floorInBase(axis.min, axis.tickSize);
+		double start = floorInBase(axis.min, axis.tickSize.number);
 		int i = 0;
 		double v = Double.NaN;
 		double prev;
 
 		do {
 			prev = v;
-			v = start + i * axis.tickSize;
+			v = start + i * axis.tickSize.number;
 			ticks.add(new TickData(v, (axis.tickFormatter == null ? String
 					.valueOf(v) : axis.tickFormatter.formatNumber(v, axis))));
 			++i;

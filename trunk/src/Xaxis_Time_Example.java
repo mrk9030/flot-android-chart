@@ -15,6 +15,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
@@ -28,6 +31,7 @@ import com.flotandroidchart.flot.Options;
 import com.flotandroidchart.flot.data.AxisData;
 import com.flotandroidchart.flot.data.PointData;
 import com.flotandroidchart.flot.data.SeriesData;
+import com.flotandroidchart.flot.data.SpecData;
 import com.flotandroidchart.flot.data.TickData;
 import com.flotandroidchart.flot.options.Axies;
 import com.flotandroidchart.flot.options.ColorHelper;
@@ -78,28 +82,18 @@ public class Xaxis_Time_Example {
 		sd3.label = "Time";
 		sds.add(sd3);
 		
-		
+		DateFormat df = new SimpleDateFormat ("yyyy/MM/dd");
 		Options opt = new Options();
 		opt.legend.show = true;
 		opt.xaxis.mode = "time";
-		/*
-		Vector<TickData> ticks = new Vector<TickData>();
-		ticks.add(new TickData(0.0, ""));
-		ticks.add(new TickData(Math.PI/2, "\u03c0/2"));
-		ticks.add(new TickData(Math.PI, "\u03c0"));
-		ticks.add(new TickData(Math.PI * 3/2, "3\u03c0/2"));
-		ticks.add(new TickData(Math.PI * 2, "2\u03c0"));
-		opt.xaxis.ticks = ticks;
-		opt.grid.backgroundColor = new int[]{0xffffff, 0xeeeeee};
-		opt.grid.clickable = true;
-		
-		opt.yaxis.ticks = new Integer(10);
-		opt.yaxis.max = 2;
-		opt.yaxis.min = -2;
-
-		opt.series.points.show = true;
-		opt.series.lines.setShow(true);
-		*/
+		opt.xaxis.minTickSize.timeNumber = new SpecData(1, "month");
+		try {
+			opt.xaxis.max = df.parse("2000/01/01").getTime();
+			opt.xaxis.min = df.parse("1999/01/01").getTime();
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		FlotDraw fd = new FlotDraw(null, sds, opt, null);
 

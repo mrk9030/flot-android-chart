@@ -383,6 +383,10 @@ public class FlotDraw implements Serializable {
 		int y = top
 				+ (fm.getAscent() + (height - (fm.getAscent() + fm.getDescent())) / 2)
 				- 2;
+		//Fix Xaxis Label out of canvas
+		if(x + fm.stringWidth(str) > canvasWidth) {
+			x = canvasWidth - fm.stringWidth(str);
+		}
 		grap.drawString(str, x, y);
 	}
 
@@ -408,8 +412,11 @@ public class FlotDraw implements Serializable {
 				if (v < axis.datamin || v > axis.datamax) {
 					continue;
 				}
-				shape.moveTo(Math.floor(axis.p2c.format(v)) + .5, 0);
-				shape.lineTo(Math.floor(axis.p2c.format(v)) + .5, plotHeight);
+				double dx = Math.floor(axis.p2c.format(v)) + .5;
+				if(dx >= 0 && dx <= plotWidth) {
+				    shape.moveTo(dx, 0);
+				    shape.lineTo(dx, plotHeight);
+				}
 			}
 		}
 
@@ -420,8 +427,11 @@ public class FlotDraw implements Serializable {
 				if (v < axis.datamin || v > axis.datamax) {
 					continue;
 				}
-				shape.moveTo(0, Math.floor(axis.p2c.format(v)) + .5);
-				shape.lineTo(plotWidth, Math.floor(axis.p2c.format(v)) + .5);
+				double dy = Math.floor(axis.p2c.format(v)) + .5;
+				if(dy >= 0 && dy <= plotHeight) {
+				    shape.moveTo(0, dy);
+				    shape.lineTo(plotWidth, dy);
+				}
 			}
 		}
 
@@ -1398,8 +1408,13 @@ public class FlotDraw implements Serializable {
 		if (axisOption.mode != null && axisOption.mode.equals("time")) {
 
 			double minSize = 0;
-			if (axisOption.minTickSize != Double.MIN_VALUE) {
-				minSize = axisOption.minTickSize;
+			if (axisOption.minTickSize != null) {
+				if(axisOption.tickSize != null && !Double.isNaN(axisOption.tickSize.number)) {
+					minSize = axisOption.tickSize.number;
+				}
+				else if(axisOption.minTickSize != null && axisOption.minTickSize.timeNumber != null){
+				    minSize = axisOption.minTickSize.timeNumber.i0 * timeUnitSize.get(axisOption.minTickSize.timeNumber.i1);
+				}
 			}
 			int i = 0;
 			for (; i < spec.size() - 1; i++) {
@@ -1431,18 +1446,21 @@ public class FlotDraw implements Serializable {
 				size *= magn;
 			}
 
-			if (axisOption.tickSize != Double.MIN_VALUE) {
-				// ###
+			if (axisOption.tickSize != null && axisOption.tickSize.timeNumber != null) {
+				size = axisOption.tickSize.timeNumber.i0;
+				unit = axisOption.tickSize.timeNumber.i1;
 			}
 
-			axis.specSize = new SpecData(size, unit);
+			axis.tickSize.timeNumber = new SpecData(size, unit);
 
 			generator = new TickGenerator() {
 				public Vector<TickData> generator(AxisData axis) {
 					Vector<TickData> ticks = new Vector<TickData>();
+					
+					SpecData specSize = axis.tickSize.timeNumber;
 
-					double tickSize = axis.specSize.i0;
-					String unit = axis.specSize.i1;
+					double tickSize = specSize.i0;
+					String unit = specSize.i1;
 					
 					Calendar d = Calendar.getInstance(TimeZone.getTimeZone("UTC")); 
 					d.setTimeInMillis((long)axis.min);
@@ -1519,13 +1537,13 @@ public class FlotDraw implements Serializable {
 				public String formatNumber(double val, AxisData axis) {
 					Calendar d = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 					
-					if(axis.specSize != null) {
+					if(axis.tickSize.timeNumber != null) {
 						d.setTimeInMillis((long) val);
 						if(axisOption.timeformat != null) {
 							return formatDate(d, axisOption.timeformat, axisOption.monthNames);
 						}
 						
-						double t = axis.specSize.i0 * timeUnitSize.get(axis.specSize.i1);
+						double t = axis.tickSize.timeNumber.i0 * timeUnitSize.get(axis.tickSize.timeNumber.i1);
 						double span = axis.max - axis.min;
 						String suffix = (axisOption.twelveHourClock) ? "%p" : "";
 						
@@ -1641,21 +1659,21 @@ public class FlotDraw implements Serializable {
 			}
 
 			size *= magn;
-			if (axisOption.minTickSize != Double.MIN_VALUE
-					&& size < axisOption.minTickSize) {
-				size = axisOption.minTickSize;
+			if (axisOption.minTickSize != null
+					&& !Double.isNaN(axisOption.minTickSize.number) &&size < axisOption.minTickSize.number) {
+				size = axisOption.minTickSize.number;
 			}
 
-			if (axisOption.tickSize != Double.MIN_VALUE) {
-				size = axisOption.tickSize;
+			if (axisOption.tickSize != null && !Double.isNaN(axisOption.tickSize.number)) {
+				size = axisOption.tickSize.number;
 			}
 
 			axis.tickDecimals = Math.max(0, (maxDec != -1 ? maxDec : dec));
 			generator = new TickGenerator();
 			formatter = new TickFormatter();
+			axis.tickSize.number = size;
 		}
 
-		axis.tickSize = size;
 		axis.tickGenerator = generator;
 
 		if (axisOption.tickFormatter != null) {
@@ -1833,11 +1851,11 @@ public class FlotDraw implements Serializable {
 
 		spec.add(new SpecData(1, "year"));
 
-		timeUnitSize.put("second", new Double(1000));
-		timeUnitSize.put("minute", new Double(60 * 1000));
-		timeUnitSize.put("hour", new Double(60 * 60 * 1000));
-		timeUnitSize.put("day", new Double(24 * 60 * 60 * 1000));
-		timeUnitSize.put("month", new Double(30 * 24 * 60 * 60 * 1000));
+		timeUnitSize.put("second", new Double(1000.0));
+		timeUnitSize.put("minute", new Double(60 * 1000.0));
+		timeUnitSize.put("hour", new Double(60 * 60 * 1000.0));
+		timeUnitSize.put("day", new Double(24 * 60 * 60 * 1000.0));
+		timeUnitSize.put("month", new Double(30 * 24 * 60 * 60 * 1000.0));
 		timeUnitSize.put("year", new Double(365.2425 * 24 * 60 * 60 * 1000));
 	}
 
