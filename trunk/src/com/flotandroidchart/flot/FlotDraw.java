@@ -235,6 +235,13 @@ public class FlotDraw implements Serializable {
 		canvasHeight = height;
 		defaultFont = font;
 		setupGrid();
+		if(options.canvas.fill) {
+			Paint p = this.getFillStyle(true, options.canvas.fillColor, 0xffffffff, canvasHeight, 0);
+			if(p != null) {
+				grap.setPaint(p);
+				grap.fillRect(0, 0, canvasWidth, canvasHeight);
+			}
+		}
 		draw();
 		drawOverlay();
 		grap = null;
@@ -1001,8 +1008,12 @@ public class FlotDraw implements Serializable {
 
 		grap.translate(plotOffset.left + plotWidth - nWidth * width - 10,
 				plotOffset.top + 10);
-		grap.setColor(new Color(0xddffffff, true));
-		grap.fillRect(0, 0, nWidth * width, height * nHeight);
+		
+		Paint p = this.getFillStyle(true, options.legend.backgroundColor, 0xffffffff, height * nHeight, 0);
+		if(p != null) {
+		    grap.setPaint(p);
+		    grap.fillRect(0, 0, nWidth * width, height * nHeight);
+		}
 
 		for (int i = 0; i < series.size(); i++) {
 			SeriesData s = series.get(i);
@@ -1013,7 +1024,7 @@ public class FlotDraw implements Serializable {
 			if (label == null || label.length() == 0) {
 				continue;
 			}
-			grap.setColor(new Color(0xcccccc));
+			grap.setColor(getTranColor(options.legend.labelBoxBorderColor));
 			grap.setStroke(new BasicStroke(1));
 			grap.drawRect(width * (i % nWidth), (height - 10) / 2 + height
 					* (i / nWidth), 14, 10);
@@ -1022,7 +1033,7 @@ public class FlotDraw implements Serializable {
 			grap.fillRect(2 + width * (i % nWidth), (height - 10) / 2 + height
 					* (i / nWidth) + 2, 11, 7);
 
-			grap.setColor(new Color(0x545454));
+			grap.setColor(getTranColor(options.legend.labelColor));
 			grap.drawString(label, 18 + width * (i % nWidth),
 					(fm.getAscent() + (height - (fm.getAscent() + fm
 							.getDescent())) / 2)

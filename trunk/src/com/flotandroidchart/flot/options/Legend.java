@@ -24,11 +24,10 @@ public class Legend {
 	public Boolean show = true;
 	public int noColumns = 1;
 	public StringFormatter labelFormatter = null;
-	public int labelBoxBorderColor = 0xccc;
+	public int labelBoxBorderColor = 0x333333;
 	public Object container = null;
 	public String position = "ne";
 	public int margin = 5;
-	public String backgroundColor = null;
-	public double backgroundOpacity = 0.85;
-
+	public Object backgroundColor = new Integer(0xffffff);
+	public int labelColor = 0x000000;
 }
