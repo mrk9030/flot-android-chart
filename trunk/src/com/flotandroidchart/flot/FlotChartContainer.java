@@ -38,11 +38,11 @@ public class FlotChartContainer extends Container {
 
 	private static final long serialVersionUID = 1L;
 	private FlotDraw _fd;
-
+	FlotOverlay fol;
 	public FlotChartContainer(FlotDraw fd) {
 		_fd = fd;
 		this.setLayout(new GridLayout(1, 1));
-		FlotOverlay fol = new FlotOverlay(_fd.getEventHolder());
+		fol = new FlotOverlay(_fd.getEventHolder());
 		add(fol);
 	}
 
@@ -54,6 +54,7 @@ public class FlotChartContainer extends Container {
 
 		_fd.draw(g2, this.getWidth(), this.getHeight(), new Font(
 				Font.SANS_SERIF, Font.PLAIN, 12));
+		fol.paint(g);
 	}
 
 }
