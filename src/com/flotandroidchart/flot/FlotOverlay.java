@@ -18,6 +18,7 @@ limitations under the License.
 
 import java.awt.Component;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -27,14 +28,16 @@ import com.flotandroidchart.global.FlotEvent;
 import com.flotandroidchart.global.FlotEventListener;
 
 
-public class FlotOverlay extends Component {
+public class FlotOverlay extends Component implements Runnable {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 	public EventHolder eventHolder;
+	private boolean _repaint = false;
 	public FlotOverlay(EventHolder evt) {
 		eventHolder = evt;
+		this.setVisible(true);
 		eventHolder.addEventListener(new FlotEventListener(){
 
 			@Override
@@ -46,7 +49,8 @@ public class FlotOverlay extends Component {
 			@Override
 			public void execute(FlotEvent event) {
 				// TODO Auto-generated method stub
-				repaint();
+				_repaint = true;
+				//repaint();
 			}
 			
 		});
@@ -100,9 +104,30 @@ public class FlotOverlay extends Component {
 			}
 			
 		});
+		new Thread(this).start();
 	}
 	
 	public void paint(Graphics g) {
-		
+		if(eventHolder != null) {
+			Graphics2D grap = (Graphics2D)g;
+			eventHolder.dispatchEvent("canvasOverlay", new FlotEvent(grap));
+		}
+	}
+
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+		while(!Thread.currentThread().isInterrupted()) {
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			if(_repaint) {
+				repaint();
+				_repaint = false;
+			}
+		}
 	}
 }

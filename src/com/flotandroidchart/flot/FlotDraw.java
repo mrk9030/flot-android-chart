@@ -30,7 +30,6 @@ import java.awt.geom.GeneralPath;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.TimeZone;
@@ -73,6 +72,7 @@ public class FlotDraw implements Serializable {
 	private EventHolder eventHolder;
 
 	Graphics2D grap = null;
+	Graphics2D grapOverlay = null;
 
 	Vector<HighlightData> highlights = new Vector<HighlightData>();
 	private EventHolder hookHolder;
@@ -151,6 +151,25 @@ public class FlotDraw implements Serializable {
 				return FlotEvent.MOUSE_CLICK;
 			}
 
+		});
+		
+		eventHolder.addEventListener(new FlotEventListener(){
+
+			@Override
+			public String Name() {
+				// TODO Auto-generated method stub
+				return "canvasOverlay";
+			}
+
+			@Override
+			public void execute(FlotEvent event) {
+				// TODO Auto-generated method stub
+				Object src = event.getSource();
+				if(src instanceof Graphics2D) {
+					drawOverlay((Graphics2D)src);
+				}
+			}
+			
 		});
 
 		// canvasWidth = 320;
@@ -243,14 +262,14 @@ public class FlotDraw implements Serializable {
 			}
 		}
 		draw();
-		drawOverlay();
+		//drawOverlay();
 		grap = null;
 		redrawing = false;
 	}
 
 	private void drawBar(double x, double y, double b, double barLeft,
 			double barRight, double offset, AxisData axisx, AxisData axisy,
-			SeriesData currentSeries) {
+			SeriesData currentSeries, Graphics2D overlay) {
 		double left, right, bottom, top, tmp;
 		boolean drawLeft, drawRight, drawBottom, drawTop;
 
@@ -324,12 +343,12 @@ public class FlotDraw implements Serializable {
 				currentSeries.series.bars.fillColor,
 				currentSeries.series.color, bottom, top);
 		if (currentSeries.series.bars.fill) {
-			grap.setPaint(p);
+			overlay.setPaint(p);
 			c.moveTo(left, bottom);
 			c.lineTo(left, top);
 			c.lineTo(right, top);
 			c.lineTo(right, bottom);
-			grap.fill(c);
+			overlay.fill(c);
 
 			c.reset();
 		}
@@ -339,8 +358,8 @@ public class FlotDraw implements Serializable {
 			BasicStroke bstroke = new BasicStroke(
 					currentSeries.series.bars.barWidth, BasicStroke.CAP_BUTT,
 					BasicStroke.CAP_ROUND);
-			grap.setStroke(bstroke);
-			grap.setColor(getTranColor(currentSeries.series.color));
+			overlay.setStroke(bstroke);
+			overlay.setColor(getTranColor(currentSeries.series.color));
 
 			// FIXME: inline moveTo is buggy with excanvas
 			c.moveTo(left, bottom + offset);
@@ -361,23 +380,23 @@ public class FlotDraw implements Serializable {
 			else
 				c.moveTo(left, bottom + offset);
 			c.closePath();
-			grap.draw(c);
+			overlay.draw(c);
 		}
 	}
 
-	private void drawBarHighlight(SeriesData series, double[] point) {
+	private void drawBarHighlight(SeriesData series, double[] point, Graphics2D overlay) {
 		int color = series.series.color;
 		series.series.color = (series.series.color | 0x80000000);
 		double barLeft = series.series.bars.align.equals("left") ? 0
 				: -series.series.bars.barWidth / 2;
 		drawBar(point[0], point[1], 0, barLeft, barLeft
 				+ series.series.bars.barWidth, 0, series.axes.xaxis,
-				series.axes.yaxis, series);
+				series.axes.yaxis, series, overlay);
 		series.series.color = color;
 	}
 
 	private void drawCenteredString(String str, int top, int left, int width,
-			int height) {
+			int height, Graphics2D grap) {
 		FontMetrics fm = grap.getFontMetrics();
 		int x = left + (width - fm.stringWidth(str)) / 2;
 		int y = top
@@ -479,11 +498,13 @@ public class FlotDraw implements Serializable {
 		grap.setTransform(old);
 	}
 
-	public void drawOverlay() {
+	public void drawOverlay(Graphics2D overlay) {
+		
+		grapOverlay = overlay;
+		
+		AffineTransform old = grapOverlay.getTransform();
 
-		AffineTransform old = grap.getTransform();
-
-		grap.translate(plotOffset.left, plotOffset.top);
+		grapOverlay.translate(plotOffset.left, plotOffset.top);
 		for (int i = 0; i < highlights.size(); i++) {
 			HighlightData hi = highlights.get(i);
 
@@ -496,9 +517,9 @@ public class FlotDraw implements Serializable {
 				// x = x + (hi.series.series.bars.align.equals("left") ?
 				// (hi.series.series.bars.barWidth / 2) : 0);
 				y = axisy.p2c.format(hi.point[1] / 2);
-				drawBarHighlight(hi.series, hi.point);
+				drawBarHighlight(hi.series, hi.point, grapOverlay);
 			} else {
-				drawPointHighlight(hi.series, hi.point);
+				drawPointHighlight(hi.series, hi.point, grapOverlay);
 			}
 
 			boolean drawLeft = (x > (plotWidth / 2));
@@ -510,7 +531,7 @@ public class FlotDraw implements Serializable {
 			String tooltip = options.grid.tooltipFormatter != null ? options.grid.tooltipFormatter
 					.format(s, hi.dataIndex)
 					: "(" + strX + "," + strY + ")";
-			FontMetrics fm = grap.getFontMetrics();
+			FontMetrics fm = grapOverlay.getFontMetrics();
 			int strWidth = fm.stringWidth(tooltip);
 			int strHeight = fm.getHeight();
 
@@ -535,23 +556,23 @@ public class FlotDraw implements Serializable {
 			Paint p = this.getFillStyle(true, options.grid.tooltipFillColor,
 					0xffff67, strHeight + 40, 0);
 			if (p != null) {
-				grap.setPaint(p);
-				grap.fill(gp);
+				grapOverlay.setPaint(p);
+				grapOverlay.fill(gp);
 			}
-			grap.setStroke(new BasicStroke(1));
-			grap.setColor(new Color(options.grid.tooltipColor));
-			grap.draw(gp);
+			grapOverlay.setStroke(new BasicStroke(1));
+			grapOverlay.setColor(new Color(options.grid.tooltipColor));
+			grapOverlay.draw(gp);
 
-			grap.setColor(new Color(0x0));
+			grapOverlay.setColor(new Color(0x0));
 			startX = startX + (drawLeft ? 0 : -1) * (strWidth + 20);
 			startY = startY + (drawTop ? 0 : -1) * (strHeight + 10);
 			drawCenteredString(tooltip, (int) startY, (int) startX,
-					strWidth + 20, strHeight + 10);
+					strWidth + 20, strHeight + 10, grapOverlay);
 		}
-		grap.setTransform(old);
+		grapOverlay.setTransform(old);
 	}
 
-	private void drawPointHighlight(SeriesData series, double[] point) {
+	private void drawPointHighlight(SeriesData series, double[] point, Graphics2D overlay) {
 		if (series == null || point == null || point.length < 2) {
 			return;
 		}
@@ -566,10 +587,10 @@ public class FlotDraw implements Serializable {
 		}
 		int pointRadius = series.series.points.radius
 				+ series.series.points.lineWidth / 2;
-		grap.setStroke(new BasicStroke(pointRadius));
-		grap.setColor(new Color(series.series.color | 0x80000000, true));
+		overlay.setStroke(new BasicStroke(pointRadius));
+		overlay.setColor(new Color(series.series.color | 0x80000000, true));
 		double radius = 1.5 * pointRadius;
-		grap.drawArc((int) (axisx.p2c.format(x) - radius), (int) (axisy.p2c
+		overlay.drawArc((int) (axisx.p2c.format(x) - radius), (int) (axisy.p2c
 				.format(y) - radius), (int) (2 * radius), (int) (2 * radius),
 				0, 360);
 
@@ -860,8 +881,12 @@ public class FlotDraw implements Serializable {
 		return axes;
 	}
 
-	public Object getCanvas() {
+	public Graphics2D getCanvas() {
 		return grap;
+	}
+	
+	public Graphics2D getCanvasOverlay(){
+		return grapOverlay;
 	}
 
 	private Paint getColorOrGradient(Object spec, double bottom, double top,
@@ -963,7 +988,7 @@ public class FlotDraw implements Serializable {
 					drawCenteredString(tick.label, plotOffset.top + plotHeight
 							+ margin, (int) Math.round(plotOffset.left
 							+ axis.p2c.format(tick.v) - axis.labelWidth / 2),
-							(int) axis.labelWidth, (int) axis.labelHeight);
+							(int) axis.labelWidth, (int) axis.labelHeight, grap);
 				}
 
 			});
@@ -1115,7 +1140,7 @@ public class FlotDraw implements Serializable {
 				continue;
 			}
 			drawBar(points.get(i), points.get(i + 1), points.get(i + 2),
-					barLeft, barRight, offset, axisx, axisy, currentSeries);
+					barLeft, barRight, offset, axisx, axisy, currentSeries, grap);
 		}
 	}
 
