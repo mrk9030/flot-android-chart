@@ -119,7 +119,7 @@ public class FlotOverlay extends Component implements Runnable {
 		// TODO Auto-generated method stub
 		while(!Thread.currentThread().isInterrupted()) {
 			try {
-				Thread.sleep(100);
+				Thread.sleep(800);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
