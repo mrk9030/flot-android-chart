@@ -21,6 +21,7 @@ import javax.swing.JFrame;
 
 import com.flotandroidchart.flot.FlotChartContainer;
 import com.flotandroidchart.flot.FlotDraw;
+import com.flotandroidchart.flot.IPlugin;
 import com.flotandroidchart.flot.Options;
 import com.flotandroidchart.flot.data.AxisData;
 import com.flotandroidchart.flot.data.PointData;
@@ -28,6 +29,7 @@ import com.flotandroidchart.flot.data.SeriesData;
 import com.flotandroidchart.flot.data.TickData;
 import com.flotandroidchart.flot.options.Axies;
 import com.flotandroidchart.flot.options.ColorHelper;
+import com.flotandroidchart.flot.plugins.CrossHairPlugin;
 import com.flotandroidchart.global.*;
 
 public class vv {
@@ -85,7 +87,7 @@ public class vv {
 		ticks.add(new TickData(Math.PI * 2, "2\u03c0"));
 		opt.xaxis.ticks = ticks;
 		opt.grid.backgroundColor = new int[]{0xffffff, 0xeeeeee};
-		opt.grid.clickable = true;
+		opt.grid.hoverable = true;
 		
 		opt.yaxis.ticks = new Integer(10);
 		opt.yaxis.max = 2;
@@ -93,9 +95,11 @@ public class vv {
 
 		opt.series.points.show = true;
 		opt.series.lines.setShow(true);
+		IPlugin[] plugins = new IPlugin[1];
+		plugins[0] = new CrossHairPlugin("xy", 0xCCAAA0A0, 2);
 
-		FlotDraw fd = new FlotDraw(null, sds, opt, null);
-
+		FlotDraw fd = new FlotDraw(null, sds, opt, plugins);
+		
 		FlotChartContainer f = new FlotChartContainer(fd);
 		f.setBounds(0, 0, 320, 480);
 		JFrame frame = new JFrame();

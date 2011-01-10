@@ -92,7 +92,7 @@ public class FlotDraw implements Serializable {
 	Hashtable<String, Double> timeUnitSize = new Hashtable<String, Double>();
 
 	public FlotDraw(Object _canvas, Vector<SeriesData> _data, Options _options,
-			Object _plugins) {
+			IPlugin[] _plugins) {
 		series = _data;
 		if (_options == null) {
 			options = new Options();
@@ -173,6 +173,7 @@ public class FlotDraw implements Serializable {
 		});
 
 		// canvasWidth = 320;
+		initPlugins(_plugins);
 		parseOptions(options);
 		setData(series);
 		// setupGrid();
@@ -569,7 +570,11 @@ public class FlotDraw implements Serializable {
 			drawCenteredString(tooltip, (int) startY, (int) startX,
 					strWidth + 20, strHeight + 10, grapOverlay);
 		}
+		
 		grapOverlay.setTransform(old);
+		
+		hookHolder.dispatchEvent(FlotEvent.HOOK_DRAWOVERLAY, new FlotEvent(
+				new HookEventObject(this, new Object[] { grapOverlay })));
 	}
 
 	private void drawPointHighlight(SeriesData series, double[] point, Graphics2D overlay) {
@@ -971,6 +976,14 @@ public class FlotDraw implements Serializable {
 			}
 		}
 		return -1;
+	}
+	
+	private void initPlugins(IPlugin[] _plugins) {
+		if(_plugins != null && _plugins.length > 0) {
+			for(int i=0;i<_plugins.length;i++) {
+				_plugins[i].init(this);
+			}
+		}
 	}
 
 	private void insertLabels() {
@@ -1832,7 +1845,7 @@ public class FlotDraw implements Serializable {
 		}
 	}
 
-	private void redraw() {
+	public void redraw() {
 		eventHolder
 				.dispatchEvent(FlotEvent.CANVAS_REPAINT, new FlotEvent(this));
 	}
