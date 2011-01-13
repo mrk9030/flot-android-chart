@@ -65,8 +65,6 @@ public class FlotDraw implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private boolean _redraw = true;
-
 	private Axies axes;
 
 	private int canvasHeight;
@@ -75,6 +73,7 @@ public class FlotDraw implements Serializable {
 
 	private EventHolder eventHolder;
 
+	private Canvas grapOverlay = null;
 	private Canvas grap = null;
 
 	private Paint gridLabelPaint;
@@ -139,6 +138,7 @@ public class FlotDraw implements Serializable {
 				if(event.getSource() instanceof MotionEvent){
 					MotionEvent evt = (MotionEvent)event.getSource();
 					if(evt != null){
+						//series.get(0).label = evt.getX() + " - - " + evt.getY();
 						executeHighlight(Name(), evt, options.grid.hoverable);
 					}
 				}
@@ -173,6 +173,25 @@ public class FlotDraw implements Serializable {
 			public String Name() {
 				// TODO Auto-generated method stub
 				return FlotEvent.MOUSE_CLICK;
+			}
+
+		});
+		
+		eventHolder.addEventListener(new FlotEventListener(){
+
+			@Override
+			public String Name() {
+				// TODO Auto-generated method stub
+				return "canvasOverlay";
+			}
+
+			@Override
+			public void execute(FlotEvent event) {
+				// TODO Auto-generated method stub
+				Object src = event.getSource();
+				if(src instanceof Canvas) {
+					drawOverlay((Canvas)src);
+				}
 			}
 			
 		});
@@ -274,7 +293,7 @@ public class FlotDraw implements Serializable {
 
 	private void drawBar(float x, float y, float b, float barLeft,
 			float barRight, float offset, AxisData axisx, AxisData axisy,
-			SeriesData currentSeries) {
+			SeriesData currentSeries, Canvas overlay) {
 		float left, right, bottom, top, tmp;
 		boolean drawLeft, drawRight, drawBottom, drawTop;
 
@@ -351,7 +370,7 @@ public class FlotDraw implements Serializable {
 			c.lineTo(right, top);
 			c.lineTo(right, bottom);
 			p.setStyle(Style.FILL);
-			grap.drawPath(c, p);
+			overlay.drawPath(c, p);
 
 			c.reset();
 		}
@@ -383,21 +402,21 @@ public class FlotDraw implements Serializable {
 			else
 				c.moveTo(left, bottom + offset);
 			c.close();
-			grap.drawPath(c, p1);
+			overlay.drawPath(c, p1);
 		}
 	}
 	
-	private void drawBarHighlight(SeriesData series, double[] point) {
+	private void drawBarHighlight(SeriesData series, double[] point, Canvas overlay) {
 		int color = series.series.color;
 		series.series.color = (series.series.color | 0x80000000);
 		float barLeft = series.series.bars.align.equals("left") ? 0 : -series.series.bars.barWidth/2;
 		drawBar((float)point[0], (float)point[1], 0, barLeft, barLeft + series.series.bars.barWidth,
-				0, series.axes.xaxis, series.axes.yaxis, series);
+				0, series.axes.xaxis, series.axes.yaxis, series, overlay);
 		series.series.color = color;		
 	}
 	
 	private void drawCenteredString(String str, float top, float left, float width,
-			float height) {		
+			float height, Canvas grap) {		
 		//FontMetrics fm = labelPaint.getFontMetrics();
 		float x = left + (width - gridLabelPaint.measureText(str)) / 2;
 		float y = top + 5;
@@ -496,11 +515,15 @@ public class FlotDraw implements Serializable {
 		grap.restore();
 	}
 
-	public void drawOverlay() {
+	public void drawOverlay(Canvas overlay) {
 		
-		grap.save();
+		grapOverlay = overlay;
+		grapOverlay.save();
 
-		grap.translate(plotOffset.left, plotOffset.top);
+		grapOverlay.translate(plotOffset.left, plotOffset.top);
+		
+		//this.drawCenteredString(trX + "---" + trY, 0, 0, 200, 50, grapOverlay);
+		
 		for(int i=0;i<highlights.size();i++) {
 			HighlightData hi = highlights.get(i);
 
@@ -512,10 +535,10 @@ public class FlotDraw implements Serializable {
 			if(hi.series.series.bars.show) {
 				//x = x + (hi.series.series.bars.align.equals("left") ? (hi.series.series.bars.barWidth / 2) : 0);
 				y = (float) axisy.p2c.format(hi.point[1]/2);
-				drawBarHighlight(hi.series, hi.point);
+				drawBarHighlight(hi.series, hi.point, grapOverlay);
 			}
 			else {
-				drawPointHighlight(hi.series, hi.point);
+				drawPointHighlight(hi.series, hi.point, grapOverlay);
 			}			
 			
 			boolean drawLeft = (x > (plotWidth / 2));
@@ -551,21 +574,28 @@ public class FlotDraw implements Serializable {
 			Paint p = this.getFillStyle(true, options.grid.tooltipFillColor, 0xffff67, strHeight+40, 0);
 			if(p != null) {
 				p.setStyle(Style.FILL);
-				grap.drawPath(gp, p);
+				grapOverlay.drawPath(gp, p);
 			}
-			p = getAnti();
-			p.setStrokeWidth(1);
-			p.setColor(getTranColor(options.grid.tooltipColor));
-			grap.drawPath(gp, p);
+			Paint p1 = getAnti();
+			p1.setStrokeWidth(1);
+			p1.setStyle(Style.STROKE);
+			p1.setColor(getTranColor(options.grid.tooltipColor));
+			grapOverlay.drawPath(gp, p1);
 			
 			startX = startX + (drawLeft ? 0 : -1) * (strWidth + 20);
-			startY = startY + (drawTop ? 0 : -1) * (strHeight + 10);
-			drawCenteredString(tooltip, (int) startY, (int) startX, strWidth + 20, strHeight + 10);					
+			startY = startY + (drawTop ? 0 : -1) * (strHeight + 10) + strHeight / 2;
+			drawCenteredString(tooltip, (int) startY, (int) startX, strWidth + 20, strHeight + 10,
+			                   grapOverlay);					
 		}
-		grap.restore();
+		grapOverlay.restore();
+		
+		hookHolder.dispatchEvent(FlotEvent.HOOK_DRAWOVERLAY, new FlotEvent(
+				new HookEventObject(this, new Object[] { grapOverlay })));
+		
+		grapOverlay = null;
 	}
 
-	private void drawPointHighlight(SeriesData series, double[] point) {
+	private void drawPointHighlight(SeriesData series, double[] point, Canvas overlay) {
 		if(series == null || point == null || point.length < 2) {
 			return;
 		}
@@ -584,7 +614,7 @@ public class FlotDraw implements Serializable {
 		p.setStrokeWidth(pointRadius);
 		p.setColor(series.series.color | 0x80000000);
 		float radius = 1.5f * pointRadius;
-		grap.drawArc(getRectF((int)(axisx.p2c.format(x) - radius), (int)(axisy.p2c.format(y) - radius), (int)(2 * radius), (int)(2 * radius)), 0, 360, false, p);
+		overlay.drawArc(getRectF((int)(axisx.p2c.format(x) - radius), (int)(axisy.p2c.format(y) - radius), (int)(2 * radius), (int)(2 * radius)), 0, 360, false, p);
 		
 		
 		
@@ -706,14 +736,19 @@ public class FlotDraw implements Serializable {
 		return p0 == p1 ? true : Math.abs(p0 - p1) < 0.00001;
 	}
 	
+	private double trX = 0;
+	private double trY = 0;
+	
 	private void executeHighlight(String name, MotionEvent evt, boolean hover) {
 
 		double canvasX = evt.getX() - plotOffset.left;
 		double canvasY = evt.getY() - plotOffset.top;
 		
+				
 		NearItemData item = findNearbyItem(canvasX, canvasY, hover);
 				
 		if(options.grid.autoHighlight) {
+			boolean _redraw = false;
 			for(int i=0;i<highlights.size();i++) {
 				HighlightData h = highlights.get(i);
 				if(h.auto.equals(name) &&
@@ -731,9 +766,7 @@ public class FlotDraw implements Serializable {
 			if(_redraw) {
 				//finished = true;
 
-				this.series.get(0).label = evt.getX() + " " + evt.getY();
 				redraw();
-				_redraw = false;
 			}
 		}
 
@@ -884,8 +917,12 @@ public class FlotDraw implements Serializable {
 		return axes;
 	}
 	
-	public Object getCanvas() {
+	public Canvas getCanvas() {
 		return grap;
+	}
+	
+	public Canvas getCanvasOverlay(){
+		return grapOverlay;
 	}
 
 	private Paint getColorOrGradient(Object spec, double bottom, double top, int defaultColor) {
@@ -994,7 +1031,7 @@ public class FlotDraw implements Serializable {
 					drawCenteredString(tick.label, plotOffset.top + plotHeight
 							+ margin, (int) Math.round(plotOffset.left
 							+ axis.p2c.format(tick.v) - axis.labelWidth / 2),
-							(int) axis.labelWidth, (int) axis.labelHeight);
+							(int) axis.labelWidth, (int) axis.labelHeight, grap);
 				}
 
 			});
@@ -1133,7 +1170,7 @@ public class FlotDraw implements Serializable {
 				continue;
 			}
 			drawBar(points.get(i).floatValue(), points.get(i + 1).floatValue(), points.get(i + 2).floatValue(),
-					barLeft, barRight, offset, axisx, axisy, currentSeries);
+					barLeft, barRight, offset, axisx, axisy, currentSeries, grap);
 		}
 	}
 	

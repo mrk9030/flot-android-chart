@@ -22,9 +22,11 @@ import com.flotandroidchart.global.FlotEventListener;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Rect;
-import android.os.Handler;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnTouchListener;
+import android.widget.FrameLayout;
 
 
 /**
@@ -42,12 +44,14 @@ import android.view.View;
  * </p>
  *
  */
-public class FlotChartContainer extends View {
+public class FlotChartContainer extends FrameLayout {
 
 	private static final long serialVersionUID = 1L;
 	private FlotDraw _fd;
 	private Rect mRect = new Rect();
-	private Handler mHandler;
+	private FlotPlot mainCanvas;
+	private FlotOverlay overlayCanvas;
+	//private Handler mHandler;
 	
 	/**
 	 * Default FlotChartContainer Constructor to build FlotChartContainer
@@ -76,8 +80,8 @@ public class FlotChartContainer extends View {
 	 */
 	public FlotChartContainer(Context context, FlotDraw fd) {
 		super(context);
-		init(fd);		
-	}	
+		init(fd);	
+	}
 	
 	/**
 	 * Reset FlotDraw Class
@@ -85,7 +89,6 @@ public class FlotChartContainer extends View {
 	 */
 	public void setDrawData(FlotDraw fd) {
 		init(fd);
-		repaint();
 	}
 	
 	/**
@@ -94,52 +97,20 @@ public class FlotChartContainer extends View {
 	 */
 	public void init(FlotDraw fd) {
 		this._fd = fd;
+		if(mainCanvas == null) {
+			mainCanvas = new FlotPlot(getContext(), _fd);
+			addView(mainCanvas, new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
+		}
+		if(overlayCanvas == null){
+			overlayCanvas = new FlotOverlay(getContext(), _fd);
+			addView(overlayCanvas, new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
+		}
 		if(_fd != null) {
-			_fd.getEventHolder().addEventListener(new FlotEventListener(){
-
-				@Override
-				public String Name() {
-					// TODO Auto-generated method stub
-					return FlotEvent.CANVAS_REPAINT;
-				}
-
-				@Override
-				public void execute(FlotEvent event) {
-					// TODO Auto-generated method stub
-
-					repaint();
-
-				}
-			});
+			mainCanvas.setDrawData(_fd);
+			overlayCanvas.setDrawData(_fd);
 		}
 		
-		this.mHandler = new Handler();
-
-	}
-	
-	protected void onDraw(Canvas paramCanvas) {
-		super.onDraw(paramCanvas);
-		paramCanvas.getClipBounds(mRect);
-		if(_fd != null) {
-			paramCanvas.save();
-			paramCanvas.translate(mRect.left, mRect.top);
-		    _fd.draw(paramCanvas, mRect.width(), mRect.height());
-		    paramCanvas.restore();
-		}
-	}
-	
-	/**
-	 * Repaint this View with a Thread.
-	 */
-	public void repaint() {
-		this.mHandler.post(new Runnable(){
-
-			@Override
-			public void run() {
-				// TODO Auto-generated method stub
-				invalidate();
-			}
-			
-		});
+		//this.mHandler = new Handler();
+		
 	}
 }
