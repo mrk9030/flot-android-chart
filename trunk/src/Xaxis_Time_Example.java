@@ -19,7 +19,6 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.TimeZone;
 import java.util.Vector;
 
@@ -32,7 +31,6 @@ import com.flotandroidchart.flot.data.AxisData;
 import com.flotandroidchart.flot.data.PointData;
 import com.flotandroidchart.flot.data.SeriesData;
 import com.flotandroidchart.flot.data.SpecData;
-import com.flotandroidchart.flot.data.TickData;
 import com.flotandroidchart.flot.options.Axies;
 import com.flotandroidchart.flot.options.ColorHelper;
 import com.flotandroidchart.global.*;
