@@ -4,10 +4,12 @@ import java.util.Vector;
 
 import com.flotandroidchart.flot.FlotChartContainer;
 import com.flotandroidchart.flot.FlotDraw;
+import com.flotandroidchart.flot.IPlugin;
 import com.flotandroidchart.flot.Options;
 import com.flotandroidchart.flot.data.PointData;
 import com.flotandroidchart.flot.data.SeriesData;
 import com.flotandroidchart.flot.data.TickData;
+import com.flotandroidchart.flot.plugins.CrossHairPlugin;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -73,8 +75,10 @@ public class vv extends Activity {
 		opt.series.lines.setShow(true);
 		opt.canvas.fill = true;
 		opt.canvas.fillColor = new int[]{0xff0000, 0xee};
+		IPlugin[] plugins = new IPlugin[1];
+		plugins[0] = new CrossHairPlugin("xy", 0xCCAAA0A0, 2);
 
-		FlotDraw fd = new FlotDraw(sds, opt, null);
+		FlotDraw fd = new FlotDraw(sds, opt, plugins);
 
 
         //FlotChartContainer tv = new FlotChartContainer(this, fd);
