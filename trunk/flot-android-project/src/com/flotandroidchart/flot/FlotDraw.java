@@ -106,7 +106,7 @@ public class FlotDraw implements Serializable {
 	 * @param _plugins
 	 */
 	public FlotDraw(Vector<SeriesData> _data, Options _options,
-			Object _plugins) {
+			IPlugin[] _plugins) {
 		series = _data;
 		if(_options == null) {
 		    options = new Options();
@@ -197,6 +197,7 @@ public class FlotDraw implements Serializable {
 		});
 
 		// canvasWidth = 320;
+		initPlugins(_plugins);
 		parseOptions(options);
 		setData(series);
 		// setupGrid();
@@ -735,10 +736,7 @@ public class FlotDraw implements Serializable {
 	private boolean equals(double p0, double p1) {
 		return p0 == p1 ? true : Math.abs(p0 - p1) < 0.00001;
 	}
-	
-	private double trX = 0;
-	private double trY = 0;
-	
+		
 	private void executeHighlight(String name, MotionEvent evt, boolean hover) {
 
 		double canvasX = evt.getX() - plotOffset.left;
@@ -1016,6 +1014,14 @@ public class FlotDraw implements Serializable {
 			}
 		}
 		return -1;
+	}
+	
+	private void initPlugins(IPlugin[] _plugins) {
+		if(_plugins != null && _plugins.length > 0) {
+			for(int i=0;i<_plugins.length;i++) {
+				_plugins[i].init(this);
+			}
+		}
 	}
 
 	private void insertLabels() {
@@ -1855,7 +1861,7 @@ public class FlotDraw implements Serializable {
 		}
 	}
 
-	private void redraw(){
+	public void redraw(){
 		eventHolder.dispatchEvent(FlotEvent.CANVAS_REPAINT, new FlotEvent(this));
 	}
 

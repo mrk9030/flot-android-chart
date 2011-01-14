@@ -16,16 +16,9 @@ limitations under the License.
 */
 package com.flotandroidchart.flot;
 
-import com.flotandroidchart.global.FlotEvent;
-import com.flotandroidchart.global.FlotEventListener;
 
 import android.content.Context;
-import android.graphics.Canvas;
-import android.graphics.Rect;
 import android.util.AttributeSet;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.View.OnTouchListener;
 import android.widget.FrameLayout;
 
 
@@ -48,7 +41,6 @@ public class FlotChartContainer extends FrameLayout {
 
 	private static final long serialVersionUID = 1L;
 	private FlotDraw _fd;
-	private Rect mRect = new Rect();
 	private FlotPlot mainCanvas;
 	private FlotOverlay overlayCanvas;
 	//private Handler mHandler;

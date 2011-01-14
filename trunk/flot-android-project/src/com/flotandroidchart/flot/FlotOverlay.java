@@ -1,6 +1,5 @@
 package com.flotandroidchart.flot;
 
-import com.flotandroidchart.global.EventHolder;
 import com.flotandroidchart.global.FlotEvent;
 import com.flotandroidchart.global.FlotEventListener;
 
@@ -8,7 +7,6 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnTouchListener;
 
 public class FlotOverlay extends View implements Runnable {
 	
