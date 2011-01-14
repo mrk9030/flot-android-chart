@@ -1743,6 +1743,7 @@ public class FlotDraw implements Serializable {
 		
 		for (int i = 0; i < series.size(); i++) {
 			SeriesData sd = series.get(i);
+			sd.datapoints = new Datapoints();
 			hookHolder.dispatchEvent(FlotEvent.HOOK_PROCESSRAWDATA, new FlotEvent(
 					new HookEventObject(this, new Object[]{sd, sd.getData(), sd.datapoints})));
 		}

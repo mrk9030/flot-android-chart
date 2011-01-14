@@ -54,7 +54,6 @@ public class vv extends Activity {
 		
 		
 		Options opt = new Options();
-		opt.xaxis.mode = "time";
 		
 		Vector<TickData> ticks = new Vector<TickData>();
 		ticks.add(new TickData(0.0, ""));
