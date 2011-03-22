@@ -19,8 +19,17 @@ package com.flotandroidchart.global;
 
 import com.flotandroidchart.flot.FlotDraw;
 
+/**
+ * 
+ * @author Administrator
+ *
+ */
 public class HookEventObject {
 	public FlotDraw fd;
+	/**
+	 * hookParam in each hook is used to 
+	 * @see FlotEvent
+	 */
 	public Object[] hookParam;
 	
 	public HookEventObject(FlotDraw fd, Object[] hookParam) {
