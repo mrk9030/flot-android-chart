@@ -2,4 +2,5 @@
 <resources>
     <string name="hello">Hello World!</string>
     <string name="app_name">flot Android Demo</string>
+    <string name="app_name1">flot Android Demo - ListView</string>
 </resources>

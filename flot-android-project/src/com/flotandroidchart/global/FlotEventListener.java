@@ -19,13 +19,25 @@ package com.flotandroidchart.global;
 
 import java.util.EventListener;
 
+/**
+ * FlotEventListener is a event listener to process flot message.
+ * 
+ * @author Administrator
+ *
+ */
 public interface FlotEventListener extends EventListener {
 	/**
+	 * Main Function to process flot message with specified event.
 	 * 
 	 * @param event
 	 */
 	public abstract void execute(FlotEvent event);
 
-	
+	/**
+	 * Find Name of Flot Event Listener in @see FlotEvent
+	 *  
+	 * @return String 
+	 * 
+	 */
 	public abstract String Name();
 }
