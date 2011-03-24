@@ -18,8 +18,20 @@ package com.flotandroidchart.flot;
 
 
 import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Rect;
+import android.os.Handler;
 import android.util.AttributeSet;
+import android.util.Log;
+import android.view.MotionEvent;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
+import android.view.View;
+import android.view.View.OnTouchListener;
 import android.widget.FrameLayout;
+
+import com.flotandroidchart.global.FlotEvent;
+import com.flotandroidchart.timer.FPSTimer;
 
 
 /**
@@ -37,12 +49,13 @@ import android.widget.FrameLayout;
  * </p>
  *
  */
-public class FlotChartContainer extends FrameLayout {
+public class FlotChartContainer extends SurfaceView implements SurfaceHolder.Callback {
 
 	private static final long serialVersionUID = 1L;
 	private FlotDraw _fd;
 	private FlotPlot mainCanvas;
 	private FlotOverlay overlayCanvas;
+	private DrawThread drawThread;
 	//private Handler mHandler;
 	
 	/**
@@ -87,8 +100,10 @@ public class FlotChartContainer extends FrameLayout {
 	 * Init View by FlotDraw
 	 * @param fd
 	 */
+	
 	public void init(FlotDraw fd) {
 		this._fd = fd;
+		/*
 		if(mainCanvas == null) {
 			mainCanvas = new FlotPlot(getContext(), _fd);
 			addView(mainCanvas, new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
@@ -103,6 +118,127 @@ public class FlotChartContainer extends FrameLayout {
 		}
 		
 		//this.mHandler = new Handler();
+		 * 
+		 */
 		
+		if(drawThread == null) {
+			SurfaceHolder holder = getHolder();
+			holder.addCallback(this);
+			
+			drawThread = new DrawThread(holder, this.getContext(), this._fd);
+
+			this.setOnTouchListener(new OnTouchListener(){
+
+				@Override
+				public boolean onTouch(View arg0, MotionEvent arg1) {
+					// TODO Auto-generated method stub
+					if(_fd != null) {
+						//plot.getData().get(0).label = arg1.getX() + "-" + arg1.getY();
+					    _fd.getEventHolder().dispatchEvent(FlotEvent.MOUSE_HOVER, new FlotEvent(arg1));
+					}
+					return true;
+				}
+				
+			});
+		}
+		else {
+			drawThread.setDrawable(this._fd);
+		}
+		
+		setFocusable(true);
+		
+	}
+
+	@Override
+	public void surfaceChanged(SurfaceHolder holder, int format, int width,
+			int height) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void surfaceCreated(SurfaceHolder holder) {
+		// TODO Auto-generated method stub
+		drawThread.setRunning(true);
+		drawThread.start();
+	}
+
+	@Override
+	public void surfaceDestroyed(SurfaceHolder holder) {
+		// TODO Auto-generated method stub
+		boolean retry = true;
+		drawThread.setRunning(false); 
+		while (retry) {
+			try {
+				drawThread.join();
+				retry = false;
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				Log.d("SurfaceDestroyed", e.getMessage());
+			}
+		}
+	}
+	
+	class DrawThread extends Thread {
+		
+		private SurfaceHolder mSurfaceHolder;
+		private boolean mRun = false;
+		private FlotDraw _fd;
+		
+		public DrawThread(SurfaceHolder holder, Context context, FlotDraw fd) {
+			mSurfaceHolder = holder;
+			_fd = fd;
+		}
+		
+		public void setDrawable(FlotDraw fd) {
+			_fd = fd;
+		}
+		
+		public void setRunning(boolean b) {
+			mRun = b;
+		}
+		
+		public void run() {
+			int fps = 0;  
+			long cur = System.currentTimeMillis();  
+			boolean isdraw = true;  
+			FPSTimer timer = new FPSTimer(60);
+			
+			while (mRun) {
+				Canvas c = null;
+				if (isdraw && _fd != null) { 
+					try {
+						c = mSurfaceHolder.lockCanvas(null);
+						synchronized (mSurfaceHolder) {
+							doDraw(c);
+						}
+						fps++;
+					} finally {
+						if (c != null) {
+							mSurfaceHolder.unlockCanvasAndPost(c);
+						}
+					}
+				}
+				isdraw = timer.elapsed();
+				long now = System.currentTimeMillis(); 
+				if (now - cur > 1000) {
+					Log.d("KZK", "FPS=" + (fps * 1000 / ((double)now - cur)));
+					fps = 0;
+					cur = now; 
+				}
+			}
+		}
+		
+		protected void doDraw(Canvas canvas) {
+			Rect mRect = new Rect();
+			canvas.getClipBounds(mRect);
+			if(_fd != null) {
+				canvas.save();
+				canvas.translate(mRect.left, mRect.top);
+			    _fd.draw(canvas, mRect.width(), mRect.height());
+			    _fd.getEventHolder().dispatchEvent("canvasOverlay", new FlotEvent(canvas));
+			    canvas.restore();
+			}
+		}
 	}
 }
