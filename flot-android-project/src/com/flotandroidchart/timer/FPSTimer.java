@@ -1,6 +1,6 @@
 package com.flotandroidchart.timer;
 
-class FPSTimer {
+public class FPSTimer {
 	private int mFPS;
 	private double mSecPerFrame;
 	private double mSecTiming;
