@@ -522,6 +522,10 @@ public class FlotDraw implements Serializable {
 		
 		for(int i=0;i<highlights.size();i++) {
 			HighlightData hi = highlights.get(i);
+			
+			if(hi == null) {
+				continue;
+			}
 
 			SeriesData s = hi.series;
 			AxisData axisx = s.axes.xaxis;
@@ -744,7 +748,7 @@ public class FlotDraw implements Serializable {
 			boolean _redraw = false;
 			for(int i=0;i<highlights.size();i++) {
 				HighlightData h = highlights.get(i);
-				if(h.auto.equals(name) &&
+				if(h != null && h.auto.equals(name) &&
 				   !(item != null && h.series == item.series && h.point == item.datapoint)) {
 					unhighlight(h.series, h.point);
 					_redraw = true;
@@ -768,6 +772,9 @@ public class FlotDraw implements Serializable {
 	public void fillInSeriesOptions() {
 		for(int k =0;k<series.size();k++) {
 			SeriesData s = series.get(k);
+			if(s == null) {
+				continue;
+			}
 			if(!s.series.lines.getShow() && options.series.lines.getShow()) {
 				s.series.lines.setShow(options.series.lines.getShow());
 			}
@@ -808,6 +815,11 @@ public class FlotDraw implements Serializable {
 		for (i = 0; i < series.size(); ++i) {
 
 			s = series.get(i);
+			
+			if(s == null) {
+				continue;
+			}
+			
 			s.series.color = colors.get(colori).intValue();
 			++colori;
 
@@ -830,7 +842,7 @@ public class FlotDraw implements Serializable {
 		for(i=0;i<series.size();i++) {
 			SeriesData s = series.get(i);
 			
-			if(!hover) {
+			if(s == null || !hover) {
 				continue;
 			}
 			AxisData axisx = s.axes.xaxis;
@@ -844,6 +856,11 @@ public class FlotDraw implements Serializable {
 			
 			if(s.series.lines.getShow() || s.series.points.show) {
 				for(j=0;j<points.size();j+=ps){
+					
+					if(points.get(j) == null || points.get(j + 1) == null) {
+						continue;
+					}
+					
 					double x = points.get(j).doubleValue();
 					double y = points.get(j + 1).doubleValue();
 					
@@ -870,6 +887,11 @@ public class FlotDraw implements Serializable {
 				double barRight = barLeft + s.series.bars.barWidth;
 				
 				for(j=0;j<points.size();j+=ps) {
+					
+					if(points.get(j) == null || points.get(j+1) == null || points.get(j+2) == null) {
+						continue;
+					}
+					
 					double x = points.get(j);
 					double y = points.get(j+1);
 					double b = points.get(j+2);
@@ -1002,7 +1024,7 @@ public class FlotDraw implements Serializable {
 	public int indexOfHighlight(SeriesData s, double[] point) {
 		for(int i=0;i<highlights.size();i++) {
 			HighlightData h = highlights.get(i);
-			if(h.series == s && h.point.length > 1 && point.length > 1) {
+			if(h != null && h.series == s && h.point.length > 1 && point.length > 1) {
 				if(equals(h.point[0] ,point[0]) && equals(h.point[1] ,point[1])) {
 					return i;
 				}
@@ -1061,6 +1083,9 @@ public class FlotDraw implements Serializable {
 		int cnt = 0;
 		for(int i=0;i<series.size();i++) {
 			SeriesData s = series.get(i);
+			if(s == null) {
+				continue;
+			}
 			String label = s.label;
 			if(options.legend.labelFormatter != null){
 				label = options.legend.labelFormatter.format(label, s);
@@ -1097,6 +1122,11 @@ public class FlotDraw implements Serializable {
 		
 		for(int i=0;i<series.size();i++) {
 			SeriesData s = series.get(i);
+			
+			if(s == null) {
+				continue;
+			}
+			
 			String label = s.label;
 			if(options.legend.labelFormatter != null){
 				label = options.legend.labelFormatter.format(label, s);
@@ -1135,6 +1165,9 @@ public class FlotDraw implements Serializable {
 		} else if (axis.labelWidth == -1 || axis.labelHeight == -1) {
 			int max = 0;
 			for (int i = 0; i < axis.ticks.size(); i++) {
+				if(axis.ticks.get(i) == null) {
+					continue;
+				}
 				int c_max = (int) gridLabelPaint.measureText(axis.ticks.get(i).label);
 				if (c_max > max) {
 					max = c_max;
@@ -1167,7 +1200,10 @@ public class FlotDraw implements Serializable {
 		int ps = datapoints.pointsize;
 
 		for (int i = 0; i < points.size(); i += ps) {
-			if (Double.isNaN(points.get(i))) {
+			if (Double.isNaN(points.get(i)) || 
+					points.get(i) == null || 
+					points.get(i + 1) == null || 
+					points.get(i + 2) == null) {
 				continue;
 			}
 			drawBar(points.get(i).floatValue(), points.get(i + 1).floatValue(), points.get(i + 2).floatValue(),
@@ -1185,7 +1221,10 @@ public class FlotDraw implements Serializable {
 
 		for (int i = ps; i < points.size(); i += ps) {
 			
-			if(points.get(i - ps) == null || points.get(i) == null) {
+			if(points.get(i - ps) == null || 
+					points.get(i) == null ||
+					points.get(i - ps + 1) == null ||
+					points.get(i + 1) == null) {
 				continue;
 			}
 			
@@ -1275,6 +1314,14 @@ public class FlotDraw implements Serializable {
 		Path ctx = new Path();
 
 		for (int i = ps; i < points.size(); i += ps) {
+			
+			if(points.get(i - ps) == null ||
+					points.get(i - ps + 1) == null ||
+					points.get(i) == null ||
+					points.get(i + 1) == null) {
+				continue;
+			}
+			
 			double x1 = points.get(i - ps);
 			double y1 = points.get(i - ps + 1);
 			double x2 = points.get(i);
@@ -1409,6 +1456,11 @@ public class FlotDraw implements Serializable {
 		int ps = datapoints.pointsize;
 
 		for (int i = 0; i < points.size(); i += ps) {
+			
+			if(points.get(i) == null || points.get(i + 1) == null) {
+				continue;
+			}
+			
 			double x = points.get(i);
 			double y = points.get(i + 1);
 			if (Double.isNaN(x) || x < axisx.min || x > axisx.max
@@ -1474,6 +1526,9 @@ public class FlotDraw implements Serializable {
 			}
 			int i = 0;
 			for (; i < spec.size() - 1; i++) {
+				if(spec.get(i) == null || spec.get(i + 1) == null) {
+					continue;
+				}
 				if (delta < (spec.get(i).i0
 						* timeUnitSize.get(spec.get(i).i1).doubleValue() + spec
 						.get(i + 1).i0
