@@ -19,6 +19,7 @@ package com.flotandroidchart.flot;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -834,7 +835,7 @@ public class FlotDraw implements Serializable {
 			}
 			AxisData axisx = s.axes.xaxis;
 			AxisData axisy = s.axes.yaxis;
-			Vector<Double> points = s.datapoints.points;
+			ArrayList<Double> points = s.datapoints.points;
 			int ps = s.datapoints.pointsize;
 			double mx = axisx.c2p.format(mouseX);
 			double my = axisy.c2p.format(mouseY);
@@ -1162,7 +1163,7 @@ public class FlotDraw implements Serializable {
 	private void plotBars(SeriesData currentSeries, Datapoints datapoints,
 			float barLeft, float barRight, float offset, AxisData axisx,
 			AxisData axisy) {
-		Vector<Double> points = datapoints.points;
+		ArrayList<Double> points = datapoints.points;
 		int ps = datapoints.pointsize;
 
 		for (int i = 0; i < points.size(); i += ps) {
@@ -1177,12 +1178,17 @@ public class FlotDraw implements Serializable {
 	private void plotLine(Datapoints datapoints, double xoffset,
 			double yoffset, AxisData axisx, AxisData axisy, Paint p) {
 		Path shape = new Path();
-		Vector<Double> points = datapoints.points;
+		ArrayList<Double> points = datapoints.points;
 		int ps = datapoints.pointsize;
 		double prevx = Double.MIN_VALUE;
 		double prevy = Double.MIN_VALUE;
 
 		for (int i = ps; i < points.size(); i += ps) {
+			
+			if(points.get(i - ps) == null || points.get(i) == null) {
+				continue;
+			}
+			
 			double x1 = points.get(i - ps);
 			double y1 = points.get(i - ps + 1);
 			double x2 = points.get(i);
@@ -1260,7 +1266,7 @@ public class FlotDraw implements Serializable {
 	
 	private void plotLineArea(Datapoints datapoints, AxisData axisx,
 			AxisData axisy, Paint p) {
-		Vector<Double> points = datapoints.points;
+		ArrayList<Double> points = datapoints.points;
 		int ps = datapoints.pointsize;
 		double bottom = Math.min(Math.max(0, axisy.min), axisy.max);
 		double top;
@@ -1399,7 +1405,7 @@ public class FlotDraw implements Serializable {
 	private void plotPoints(boolean fill, SeriesData currentSeries,
 			Datapoints datapoints, float radius, float offset,
 			float circumference, AxisData axisx, AxisData axisy, Paint pa) {
-		Vector<Double> points = datapoints.points;
+		ArrayList <Double> points = datapoints.points;
 		int ps = datapoints.pointsize;
 
 		for (int i = 0; i < points.size(); i += ps) {
@@ -1765,8 +1771,9 @@ public class FlotDraw implements Serializable {
 			}
 
 			int ps = sd.datapoints.pointsize;
-			Vector<Double> points = sd.datapoints.points;
+			ArrayList<Double> points = sd.datapoints.points;
 
+			boolean insertSteps = sd.series.lines.getShow() && sd.series.lines.steps;
 			sd.axes.xaxis.used = sd.axes.yaxis.used = true;
 
 			int k = 0;
@@ -1782,10 +1789,35 @@ public class FlotDraw implements Serializable {
 
 							if (f != null) {
 							}
-							points.add(new Double(val));
+							points.add(k + m, new Double(val));
 						} else {
-							points.add(new Double(0));
+							points.add(k + m, new Double(0));
 						}
+					}
+				}
+				
+				if(nullify) {
+					for (int m = 0; m < ps; m++) {
+						points.add(k + m, null);
+					}
+				}
+				else {
+					// a little bit of line specific stuff that
+                    // perhaps shouldn't be here, but lacking
+                    // better means...
+					if(insertSteps && k > 0
+					   && points.get(k - ps) != null
+					   && !points.get(k - ps).equals(points.get(k))
+					   && !points.get(k - ps + 1).equals(points.get(k + 1))) {
+						
+						for(int m = 0; m < ps; m++) {
+							points.add(k + ps + m, new Double(points.get(k + m)));
+						}
+						
+						points.set(k + 1, new Double(points.get(k - ps + 1)));
+						
+						k += ps;
+						
 					}
 				}
 			}
@@ -1805,7 +1837,7 @@ public class FlotDraw implements Serializable {
 
 		for (int i = 0; i < series.size(); i++) {
 			SeriesData s = series.get(i);
-			Vector<Double> points = s.datapoints.points;
+			ArrayList<Double> points = s.datapoints.points;
 			int ps = s.datapoints.pointsize;
 			for (int j = 0; j < points.size(); j += ps) {
 				if (points.get(j) == null) {

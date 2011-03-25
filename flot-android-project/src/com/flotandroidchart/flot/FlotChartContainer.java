@@ -20,15 +20,12 @@ package com.flotandroidchart.flot;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Rect;
-import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
-import android.view.View.OnTouchListener;
-import android.widget.FrameLayout;
 
 import com.flotandroidchart.global.FlotEvent;
 import com.flotandroidchart.timer.FPSTimer;
@@ -53,10 +50,7 @@ public class FlotChartContainer extends SurfaceView implements SurfaceHolder.Cal
 
 	private static final long serialVersionUID = 1L;
 	private FlotDraw _fd;
-	private FlotPlot mainCanvas;
-	private FlotOverlay overlayCanvas;
 	private DrawThread drawThread;
-	//private Handler mHandler;
 	
 	/**
 	 * Default FlotChartContainer Constructor to build FlotChartContainer
@@ -103,23 +97,6 @@ public class FlotChartContainer extends SurfaceView implements SurfaceHolder.Cal
 	
 	public void init(FlotDraw fd) {
 		this._fd = fd;
-		/*
-		if(mainCanvas == null) {
-			mainCanvas = new FlotPlot(getContext(), _fd);
-			addView(mainCanvas, new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
-		}
-		if(overlayCanvas == null){
-			overlayCanvas = new FlotOverlay(getContext(), _fd);
-			addView(overlayCanvas, new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
-		}
-		if(_fd != null) {
-			mainCanvas.setDrawData(_fd);
-			overlayCanvas.setDrawData(_fd);
-		}
-		
-		//this.mHandler = new Handler();
-		 * 
-		 */
 		
 		if(drawThread == null) {
 			SurfaceHolder holder = getHolder();
