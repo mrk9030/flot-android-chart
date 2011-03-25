@@ -92,8 +92,6 @@ public class FlotDraw implements Serializable {
 	
 	private int plotWidth;
 	
-	private boolean redrawing = true;
-	
 	private Vector<SeriesData> series;
 
 	Vector<SpecData> spec = new Vector<SpecData>();
@@ -130,16 +128,17 @@ public class FlotDraw implements Serializable {
 
 			@Override
 			public void execute(FlotEvent event) {
-				// TODO Auto-generated method stub
-				if(redrawing) {
-					return;
-				}
 				
 				if(event.getSource() instanceof MotionEvent){
 					MotionEvent evt = (MotionEvent)event.getSource();
 					if(evt != null){
+						switch (evt.getAction()) {
+						case MotionEvent.ACTION_DOWN:
+							executeHighlight(Name(), evt,
+									options.grid.hoverable);
+							break;
+						}
 						//series.get(0).label = evt.getX() + " - - " + evt.getY();
-						executeHighlight(Name(), evt, options.grid.hoverable);
 					}
 				}
 			}
@@ -156,9 +155,6 @@ public class FlotDraw implements Serializable {
 			@Override
 			public void execute(FlotEvent event) {
 				// TODO Auto-generated method stub
-				if(redrawing) {
-					return;
-				}
 				/*
 				if(event.getSource() instanceof MouseEvent){
 					MouseEvent evt = (MouseEvent)event.getSource();
@@ -274,7 +270,6 @@ public class FlotDraw implements Serializable {
 	}
 
 	public void draw(Canvas g, int width, int height) {
-		redrawing = true;
 		grap = g;
 		canvasWidth = width;
 		canvasHeight = height;
@@ -289,7 +284,6 @@ public class FlotDraw implements Serializable {
 		draw();
 		//drawOverlay();
 		grap = null;
-		redrawing = false;
 	}
 
 	private void drawBar(float x, float y, float b, float barLeft,
