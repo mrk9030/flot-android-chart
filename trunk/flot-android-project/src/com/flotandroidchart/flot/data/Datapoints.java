@@ -17,10 +17,11 @@ limitations under the License.
 
 package com.flotandroidchart.flot.data;
 
+import java.util.ArrayList;
 import java.util.Vector;
 
 public class Datapoints {
-	public Vector<Double> points = new Vector<Double>();
+	public ArrayList<Double> points = new ArrayList<Double>();
 
 	public Vector<FormatData> format = new Vector<FormatData>();
 

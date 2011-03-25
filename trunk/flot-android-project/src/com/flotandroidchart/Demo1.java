@@ -29,6 +29,10 @@ public class Demo1 extends Activity {
 		sd1.setData(pds);
 		sds.add(sd1);
 		
+		SeriesData sd2 = new SeriesData();
+		sd2.setData(new double[][]{{0, 12}, {7, 12}, null, {7, 2.5}, {12, 2.5}});
+		sds.add(sd2);
+		
 		FlotDraw fd = new FlotDraw(sds, null, null);
 
         setContentView(R.layout.main);

@@ -68,6 +68,7 @@ public class Demo2 extends Activity {
 		}
 		sd6.setData(pds4);
 		sd6.series.lines.setShow(true);
+		sd6.series.lines.steps = true;
 		sds.add(sd6);
 		
 		FlotDraw fd = new FlotDraw(sds, null, null);
