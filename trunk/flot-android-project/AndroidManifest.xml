@@ -4,7 +4,7 @@
       android:versionCode="1"
       android:versionName="1.0">
     <application android:icon="@drawable/icon" android:label="@string/app_name"
-          android:theme="@android:style/Theme.NoTitleBar">
+          >
         <activity android:name=".vv" android:label="@string/app_name">
             <!-- 
             <intent-filter>
@@ -21,27 +21,25 @@
             </intent-filter>
              -->
         </activity>
-        <activity android:name=".Demo" android:label="@string/app_name">
+        <activity android:name=".Demo" android:label="@string/app_name"  android:theme="@android:style/Theme.NoTitleBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity android:name=".Demo_List" android:label="@string/app_name1">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
-        <activity android:name=".Demo1" android:label="@string/app_name">
+        <activity android:name=".Demo1" android:label="Basic Example">
         </activity>
-        <activity android:name=".Demo2" android:label="@string/app_name">
+        <activity android:name=".Demo2" android:label="Different graph types">
         </activity>
-        <activity android:name=".Demo3" android:label="@string/app_name">
+        <activity android:name=".Demo3" android:label="Setting various options">
         </activity>
-        <activity android:name=".Demo4" android:label="@string/app_name">
+        <activity android:name=".Demo4" android:label="Interacting with datapoints">
         </activity>
-        <activity android:name=".Demo5" android:label="@string/app_name">
+        <activity android:name=".Demo5" android:label="CrossHair Plugin">
+        </activity>
+        <activity android:name=".Demo6" android:label="Annotating a chart">
         </activity>
     </application>
 

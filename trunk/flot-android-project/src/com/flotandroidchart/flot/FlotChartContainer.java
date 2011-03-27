@@ -49,9 +49,15 @@ import com.flotandroidchart.timer.FPSTimer;
 public class FlotChartContainer extends SurfaceView implements SurfaceHolder.Callback {
 
 	private static final long serialVersionUID = 1L;
+	private static final int INVALID_POINTER_ID = -1;
 	private FlotDraw _fd;
 	private DrawThread drawThread;
 	
+	private float mLastTouchX;
+    private float mLastTouchY;
+    private int mActivePointerId = INVALID_POINTER_ID;
+    private boolean bMoved = false;
+    
 	/**
 	 * Default FlotChartContainer Constructor to build FlotChartContainer
 	 * in Layout xml files, and then setDrawData with FlotDraw.
@@ -107,11 +113,50 @@ public class FlotChartContainer extends SurfaceView implements SurfaceHolder.Cal
 			this.setOnTouchListener(new OnTouchListener(){
 
 				@Override
-				public boolean onTouch(View arg0, MotionEvent arg1) {
+				public boolean onTouch(View arg0, MotionEvent ev) {
 					// TODO Auto-generated method stub
-					if(_fd != null) {
-						//plot.getData().get(0).label = arg1.getX() + "-" + arg1.getY();
-					    _fd.getEventHolder().dispatchEvent(FlotEvent.MOUSE_HOVER, new FlotEvent(arg1));
+					
+					final int action = ev.getAction();
+					
+					switch (action & MotionEvent.ACTION_MASK) {
+					case MotionEvent.ACTION_DOWN:
+						final float x = ev.getX();
+						final float y = ev.getY();
+						
+						mLastTouchX = x;
+			            mLastTouchY = y;
+			            mActivePointerId = ev.getPointerId(0);
+			            bMoved = false;
+						break;
+					case MotionEvent.ACTION_MOVE:
+						final int pointerIndex = ev.findPointerIndex(mActivePointerId);
+						final float x1 = ev.getX(pointerIndex);
+						final float y1 = ev.getY(pointerIndex);
+						
+						mLastTouchX = x1;
+						mLastTouchY = y1;
+						bMoved = true;
+						break;
+					case MotionEvent.ACTION_UP:
+						mActivePointerId = INVALID_POINTER_ID;
+
+						if(_fd != null && !bMoved) {
+							//plot.getData().get(0).label = arg1.getX() + "-" + arg1.getY();
+						    _fd.getEventHolder().dispatchEvent(FlotEvent.MOUSE_HOVER, new FlotEvent(ev));
+						}
+						break;
+					case MotionEvent.ACTION_CANCEL:
+						mActivePointerId = INVALID_POINTER_ID;
+						break;
+					case MotionEvent.ACTION_POINTER_UP:
+						final int pointerIndex1 = (ev.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT; 
+						final int pointerId = ev.getPointerId(pointerIndex1);
+						
+						if (pointerId == mActivePointerId) {
+							Log.d("onTouch", "taged;");
+							final int newPointerIndex = pointerIndex1 == 0 ? 1 : 0;
+						}
+						break;
 					}
 					return true;
 				}
@@ -161,6 +206,7 @@ public class FlotChartContainer extends SurfaceView implements SurfaceHolder.Cal
 		private SurfaceHolder mSurfaceHolder;
 		private boolean mRun = false;
 		private FlotDraw _fd;
+		FPSTimer timer;
 		
 		public DrawThread(SurfaceHolder holder, Context context, FlotDraw fd) {
 			mSurfaceHolder = holder;
@@ -168,7 +214,13 @@ public class FlotChartContainer extends SurfaceView implements SurfaceHolder.Cal
 		}
 		
 		public void setDrawable(FlotDraw fd) {
-			_fd = fd;
+			_fd = fd;  
+			if(_fd != null && _fd.getOptions() != null) {
+				timer = new FPSTimer(_fd.getOptions().fps);
+			}
+			else {
+				timer = new FPSTimer(60);
+			}
 		}
 		
 		public void setRunning(boolean b) {
@@ -179,7 +231,12 @@ public class FlotChartContainer extends SurfaceView implements SurfaceHolder.Cal
 			int fps = 0;  
 			long cur = System.currentTimeMillis();  
 			boolean isdraw = true;  
-			FPSTimer timer = new FPSTimer(60);
+			if(_fd != null && _fd.getOptions() != null) {
+				timer = new FPSTimer(_fd.getOptions().fps);
+			}
+			else {
+				timer = new FPSTimer(60);
+			}			
 			
 			while (mRun) {
 				Canvas c = null;
@@ -187,6 +244,7 @@ public class FlotChartContainer extends SurfaceView implements SurfaceHolder.Cal
 					try {
 						c = mSurfaceHolder.lockCanvas(null);
 						synchronized (mSurfaceHolder) {
+							Log.d("Draw", "ss");
 							doDraw(c);
 						}
 						fps++;
@@ -213,7 +271,7 @@ public class FlotChartContainer extends SurfaceView implements SurfaceHolder.Cal
 				canvas.save();
 				canvas.translate(mRect.left, mRect.top);
 			    _fd.draw(canvas, mRect.width(), mRect.height());
-			    _fd.getEventHolder().dispatchEvent("canvasOverlay", new FlotEvent(canvas));
+			    //_fd.getEventHolder().dispatchEvent("canvasOverlay", new FlotEvent(canvas));
 			    canvas.restore();
 			}
 		}
