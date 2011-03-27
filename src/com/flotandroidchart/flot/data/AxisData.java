@@ -33,11 +33,12 @@ public class AxisData {
 	public double min = Double.MIN_VALUE;
 	public double scale = 1;
 	public int tickDecimals = -1;
-	public TickSize tickSize = new TickSize();
+	public double tickSize = 0;
 	public Vector<TickData> ticks = new Vector<TickData>();
 	public TickFormatter tickFormatter = null;
 	public TickGenerator tickGenerator = null;
 
 	public DoubleFormatter p2c = null;
 	public DoubleFormatter c2p = null;
+	public SpecData specSize = null;
 }

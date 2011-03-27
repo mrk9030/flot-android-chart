@@ -17,7 +17,6 @@ limitations under the License.
 
 package com.flotandroidchart.flot.options;
 
-import com.flotandroidchart.flot.data.TickSize;
 import com.flotandroidchart.flot.format.DoubleFormatter;
 import com.flotandroidchart.flot.format.TickFormatter;
 
@@ -33,10 +32,10 @@ public class AxisOption {
 	public TickFormatter tickFormatter = null;
 	public int labelWidth = -1;
 	public int labelHeight = -1;
-	
+
 	public int tickDecimals = -1;
-	public TickSize tickSize = new TickSize();
-	public TickSize minTickSize = new TickSize();
+	public double tickSize = Double.MIN_VALUE;
+	public double minTickSize = Double.MIN_VALUE;
 	public String[] monthNames = null;
 	public String timeformat = null;
 	public Boolean twelveHourClock = false;

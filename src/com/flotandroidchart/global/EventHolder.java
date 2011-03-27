@@ -20,12 +20,40 @@ package com.flotandroidchart.global;
 import java.util.Enumeration;
 import java.util.Vector;
 
+/**
+ * A Event Handler to listen and dispatch flot charting event as ActionScript does.
+ * <b>Example:</b>
+ * <p>
+ * EventHolder eventHolder = new EventHolder();
+ * -------add event listener section-----------
+ * eventHandler.addEventListener(new FlotEventListener() {
+ * 
+ * 			@Override
+ *  		public String Name() {
+ *  				// TODO Auto-generated method stub
+ *  				return FlotEvent.MOUSE_HOVER;
+ *  		}
+ *  
+ *  		@Override
+ *  		public void execute(FlotEvent event) {
+ *  			// TODO Auto-generated method stub
+ *  			System.out.print("Trig Mouse Hover Event");
+ *  		}
+ * });
+ * 
+ * -------dispatch Flot Event---------
+ * eventHolder.dispatchEvent(FlotEvent.MOUSE_HOVER, new FlotEvent(v));
+ * </p>
+ * @author thechatroulettegirls
+ *
+ */
 public class EventHolder {
 
-	Vector<FlotEventListener> _listener = new Vector<FlotEventListener>();
+	private Vector<FlotEventListener> _listener = new Vector<FlotEventListener>();
 
 	/**
-	 * 
+	 * Function <b>addEventListener</b> to add listener event for processing event.
+	 *
 	 * @param flot
 	 */
 	public void addEventListener(FlotEventListener flot) {
@@ -33,7 +61,7 @@ public class EventHolder {
 	}
 
 	/**
-	 * 
+	 * Function <b>removeEventListener</b> to remove event listener.
 	 * @param flot
 	 */
 	public void removeEventListener(FlotEventListener flot) {
@@ -41,7 +69,7 @@ public class EventHolder {
 	}
 
 	/**
-	 * 
+	 * Function <b>dispatchEvent</b> to dispatch flot event. 
 	 * @param name
 	 * @param _event
 	 */

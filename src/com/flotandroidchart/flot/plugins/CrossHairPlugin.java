@@ -1,10 +1,9 @@
 package com.flotandroidchart.flot.plugins;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.event.MouseEvent;
-import java.awt.geom.AffineTransform;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Paint.Style;
+import android.view.MotionEvent;
 
 import com.flotandroidchart.flot.FlotDraw;
 import com.flotandroidchart.flot.IPlugin;
@@ -53,12 +52,12 @@ public class CrossHairPlugin implements IPlugin {
 				if (crosshair.locked)
 					return;
 				
-				if(event.getSource() instanceof MouseEvent) {
-					MouseEvent evt = (MouseEvent)event.getSource();
+				if(event.getSource() instanceof MotionEvent) {
+					MotionEvent evt = (MotionEvent)event.getSource();
 					if(evt != null){
 						RectOffset offset = plot.getPlotOffset();
-						crosshair.x = Math.max(0, Math.min(evt.getX() - offset.left, plot.width()));
-						crosshair.y = Math.max(0, Math.min(evt.getY() - offset.top, plot.height()));
+						crosshair.x = (int) Math.max(0, Math.min(evt.getX() - offset.left, plot.width()));
+						crosshair.y = (int) Math.max(0, Math.min(evt.getY() - offset.top, plot.height()));
 						plot.redraw();
 					}
 				}
@@ -84,27 +83,29 @@ public class CrossHairPlugin implements IPlugin {
 				if(event.getSource() instanceof HookEventObject) {
 					HookEventObject heo = (HookEventObject)event.getSource();
 					if(heo != null && heo.hookParam.length > 0) {
-						Graphics2D grap = (Graphics2D) heo.hookParam[0];
+						Canvas grap = (Canvas) heo.hookParam[0];
 						if(grap != null){
 							RectOffset rect = plot.getPlotOffset();
-							AffineTransform old = grap.getTransform();
+							grap.save();
 							
 							grap.translate(rect.left, rect.top);
 							
 							if(crosshair.x != -1) {
-								grap.setStroke(new BasicStroke(lineWidth));
-								grap.setColor(new Color(color, true));
+								Paint p = new Paint();
+								p.setColor(color);
+								p.setStyle(Style.STROKE);
+								p.setStrokeWidth(lineWidth);
 								
 								if(mode.indexOf('x') != -1) {
-									grap.drawLine(crosshair.x, 0, crosshair.x, plot.height());
+									grap.drawLine(crosshair.x, 0, crosshair.x, plot.height(), p);
 								}
 								
 								if(mode.indexOf('y') != -1) {
-									grap.drawLine(0, crosshair.y, plot.width(), crosshair.y);
+									grap.drawLine(0, crosshair.y, plot.width(), crosshair.y, p);
 								}
 							}
 							
-							grap.setTransform(old);
+							grap.restore();
 						}
 					}
 				}
