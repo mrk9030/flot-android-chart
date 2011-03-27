@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="horizontal" android:layout_width="wrap_content"
+	android:padding = "6dip"
+	android:layout_height="?android:attr/listPreferredItemHeight">
+	<ImageView android:id="@+id/simple_list_item_icon_iv" 
+		android:layout_width="wrap_content"
+		android:layout_height="fill_parent"
+		android:layout_marginRight="6dip">
+	</ImageView>
+	<TextView android:id="@+id/simple_list_item_icon_tv" 
+		android:layout_width="wrap_content" 
+		android:layout_height="wrap_content">
+	</TextView>	
+</LinearLayout>
