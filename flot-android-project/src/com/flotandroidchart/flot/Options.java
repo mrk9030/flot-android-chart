@@ -34,6 +34,7 @@ public class Options {
 	public AxisOption y2axis = new AxisOption();
 	public AxisOption yaxis = new AxisOption();
 	public BackgroundCanvas canvas = new BackgroundCanvas();
+	public int fps = 100;
 
 	public Options() {
 		yaxis.autoscaleMargin = 0.02;

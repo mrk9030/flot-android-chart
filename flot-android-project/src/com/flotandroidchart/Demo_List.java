@@ -36,6 +36,7 @@ public class Demo_List extends Activity implements OnItemClickListener {
 		itemData.add(new ItemData(android.R.drawable.ic_menu_agenda, "Setting various options", this.getPackageName() + ".Demo3"));
 		itemData.add(new ItemData(android.R.drawable.ic_menu_camera, "Interacting with datapoints", this.getPackageName() + ".Demo4"));
 		itemData.add(new ItemData(android.R.drawable.ic_menu_call, "CrossHair Plugin", this.getPackageName() + ".Demo5"));
+		itemData.add(new ItemData(android.R.drawable.ic_menu_compass, "Annotating a chart", this.getPackageName() + ".Demo6"));
 		grid_main.setAdapter(new ImageAdapter(this, itemData));
 		grid_main.setOnItemClickListener(this);
 	}

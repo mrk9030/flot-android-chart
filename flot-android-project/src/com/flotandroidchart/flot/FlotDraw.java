@@ -33,13 +33,16 @@ import android.graphics.Path;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.Paint.Style;
+import android.util.Log;
 import android.view.MotionEvent;
 
 import com.flotandroidchart.flot.data.AxisData;
 import com.flotandroidchart.flot.data.Datapoints;
 import com.flotandroidchart.flot.data.FormatData;
 import com.flotandroidchart.flot.data.HighlightData;
+import com.flotandroidchart.flot.data.MarkingData;
 import com.flotandroidchart.flot.data.NearItemData;
+import com.flotandroidchart.flot.data.RangeData;
 import com.flotandroidchart.flot.data.RectOffset;
 import com.flotandroidchart.flot.data.SeriesData;
 import com.flotandroidchart.flot.data.SpecData;
@@ -133,12 +136,8 @@ public class FlotDraw implements Serializable {
 				if(event.getSource() instanceof MotionEvent){
 					MotionEvent evt = (MotionEvent)event.getSource();
 					if(evt != null){
-						switch (evt.getAction()) {
-						case MotionEvent.ACTION_DOWN:
-							executeHighlight(Name(), evt,
-									options.grid.hoverable);
-							break;
-						}
+						executeHighlight(Name(), evt,
+								options.grid.hoverable);
 						//series.get(0).label = evt.getX() + " - - " + evt.getY();
 					}
 				}
@@ -172,25 +171,6 @@ public class FlotDraw implements Serializable {
 				return FlotEvent.MOUSE_CLICK;
 			}
 
-		});
-		
-		eventHolder.addEventListener(new FlotEventListener(){
-
-			@Override
-			public String Name() {
-				// TODO Auto-generated method stub
-				return "canvasOverlay";
-			}
-
-			@Override
-			public void execute(FlotEvent event) {
-				// TODO Auto-generated method stub
-				Object src = event.getSource();
-				if(src instanceof Canvas) {
-					drawOverlay((Canvas)src);
-				}
-			}
-			
 		});
 
 		// canvasWidth = 320;
@@ -283,7 +263,7 @@ public class FlotDraw implements Serializable {
 		}
 		setupGrid();
 		draw();
-		//drawOverlay();
+		drawOverlay(grap);
 		grap = null;
 	}
 
@@ -397,7 +377,7 @@ public class FlotDraw implements Serializable {
 				c.lineTo(left, bottom + offset);
 			else
 				c.moveTo(left, bottom + offset);
-			c.close();
+			/*c.close();*/
 			overlay.drawPath(c, p1);
 		}
 	}
@@ -428,6 +408,93 @@ public class FlotDraw implements Serializable {
 			Paint p = getColorOrGradient(options.grid.backgroundColor, plotHeight, 0, 0xffffff);
 			p.setStyle(Style.FILL);
 			drawRect(grap, 0, 0, plotWidth, plotHeight, p);
+		}
+		
+		// draw markings
+		Vector<MarkingData> markings = options.grid.markings; 
+		if(markings != null) {
+			
+			for(MarkingData m : markings) {
+				RangeData xrange = m.xaxis;
+				RangeData yrange = m.yaxis;
+				double xfrom = 0;
+				double xto = 0;
+				double yfrom = 0;
+				double yto = 0;
+				
+				if(xrange != null) {
+					xrange.axis = axes.xaxis;
+					xfrom = xrange.from;
+					xto = xrange.to;
+					if(Double.isNaN(xfrom)) {
+						xfrom = xrange.axis.min;
+					}
+					if(Double.isNaN(xto)) {
+						xto = xrange.axis.max;
+					}
+
+                	
+                	Log.d("FlotDraw", "line" + xrange.from + xrange.to);
+				}
+				
+				if(yrange != null) {
+					yrange.axis = axes.yaxis;
+					yfrom = yrange.from;
+					yto = yrange.to;
+					if(Double.isNaN(yfrom)) {
+						yfrom = yrange.axis.min;
+					}
+					if(Double.isNaN(yto)) {
+						yto = yrange.axis.max;
+					}
+				}
+				
+				if (xto < xrange.axis.min || xfrom > xrange.axis.max ||
+                        yto < yrange.axis.min || yfrom > yrange.axis.max)
+                        continue;
+				
+				xfrom = Math.max(xfrom, xrange.axis.min);
+				xto = Math.min(xto, xrange.axis.max);
+				
+				yfrom = Math.max(yfrom, yrange.axis.min);
+                yto = Math.min(yto, yrange.axis.max);
+
+                if (xfrom == xto && yfrom == yto)
+                    continue;
+
+                // then draw
+                xfrom = xrange.axis.p2c.format(xfrom);
+                xto = xrange.axis.p2c.format(xto);
+                yfrom = yrange.axis.p2c.format(yfrom);
+                yto = yrange.axis.p2c.format(yto);
+                
+                Paint p12 = getAnti();
+            	
+            	if(m.color == 0) {
+            		p12.setColor(getTranColor(options.grid.markingsColor));
+            	}
+            	else {
+            		p12.setColor(getTranColor(m.color));
+            	}
+            	
+                if (xfrom == xto || yfrom == yto) {
+                	
+                	if(m.lineWidth <= 0) {
+                		p12.setStrokeWidth(options.grid.markingsLineWidth);
+                	}
+                	else {
+                		p12.setStrokeWidth(m.lineWidth);
+                	}
+                	p12.setStyle(Style.STROKE);
+                	grap.drawLine((float)xfrom, (float)yfrom, (float)xto, (float)yto, p12);
+                }
+                else {
+                	p12.setStyle(Style.FILL);
+                	grap.drawRect((float)xfrom, (float)yto, (float)xto,
+                			(float)yfrom, p12);
+                }
+			}
+			
 		}
 		
 		Paint p = getAnti();
@@ -468,7 +535,7 @@ public class FlotDraw implements Serializable {
 		if (axis.used) {
 			for (int i = 0; i < axis.ticks.size(); i++) {
 				double v = axis.ticks.get(i).v;
-				if (v < axis.datamin || v > axis.datamax) {
+				if (v < (axis.datamin) || v > (axis.datamax)) {
 					continue;
 				}
 				shape.moveTo((float) (Math.floor(axis.p2c.format(v)) + .5), -5);
@@ -741,8 +808,11 @@ public class FlotDraw implements Serializable {
 		double canvasX = evt.getX() - plotOffset.left;
 		double canvasY = evt.getY() - plotOffset.top;
 		
-				
+		long current = System.currentTimeMillis();
+		
 		NearItemData item = findNearbyItem(canvasX, canvasY, hover);
+		
+		Log.d("findNearbyItem", "" + (System.currentTimeMillis() - current));
 				
 		if(options.grid.autoHighlight) {
 			boolean _redraw = false;
@@ -820,7 +890,9 @@ public class FlotDraw implements Serializable {
 				continue;
 			}
 			
-			s.series.color = colors.get(colori).intValue();
+			if(s.series.color == -1) {
+			    s.series.color = colors.get(colori).intValue();
+			}
 			++colori;
 
 			s.series.defaultLinesShow();
@@ -987,7 +1059,7 @@ public class FlotDraw implements Serializable {
 		return p;
 	}
 
-	public Object getOptions() {
+	public Options getOptions() {
 		return options;
 	}
 

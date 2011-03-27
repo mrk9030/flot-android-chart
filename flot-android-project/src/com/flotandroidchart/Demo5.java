@@ -27,7 +27,7 @@ public class Demo5 extends Activity {
 			pds.add(new PointData(i, Math.sin(i)));
 		}
 		sd.setData(pds);
-		sd.label = "中文";
+		sd.label = "sin(x)";
 		sds.add(sd);		 
 		
 

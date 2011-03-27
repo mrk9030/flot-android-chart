@@ -2,18 +2,19 @@ package com.flotandroidchart;
 
 import java.util.Vector;
 
-import android.app.Activity;
-import android.os.Bundle;
-
 import com.flotandroidchart.flot.FlotChartContainer;
 import com.flotandroidchart.flot.FlotDraw;
 import com.flotandroidchart.flot.Options;
+import com.flotandroidchart.flot.data.MarkingData;
 import com.flotandroidchart.flot.data.PointData;
+import com.flotandroidchart.flot.data.RangeData;
 import com.flotandroidchart.flot.data.SeriesData;
 import com.flotandroidchart.flot.data.TickData;
 
-public class Demo4 extends Activity {
+import android.app.Activity;
+import android.os.Bundle;
 
+public class Demo6 extends Activity {
 
     /** Called when the activity is first created. */
     @Override
@@ -21,36 +22,30 @@ public class Demo4 extends Activity {
         super.onCreate(savedInstanceState);
         Vector<SeriesData> sds = new Vector<SeriesData>();
 		
+		
 		SeriesData sd1 = new SeriesData();
 		Vector<PointData> pds = new Vector<PointData>();
-		for(double i=0; i < 14; i+=0.5) {
+		for(double i=0; i < 20; i++) {
 			pds.add(new PointData(i, Math.sin(i)));
 		}
 		sd1.setData(pds);
-		sd1.label = "sin(x)";
+		sd1.label="Pressure";
+		sd1.series.color = 0xee000333;
+		sd1.series.bars.show = true;
+		sd1.series.bars.barWidth = 0.5f;
 		sds.add(sd1);
 		
-
-		
-		SeriesData sd2 = new SeriesData();
-		Vector<PointData> pds1 = new Vector<PointData>();
-		for(double i=0; i < 14; i+=0.5) {
-			pds1.add(new PointData(i, Math.cos(i)));
-		}
-		sd2.setData(pds1);
-		sd2.label = "cos(x)";
-		sds.add(sd2);
-		
-        Options opt = new Options();
-		
-		opt.grid.hoverable = true;
-		
-		opt.series.lines.setShow(true);
-		opt.series.points.show = true;
-		
-		opt.yaxis.max = 1.2;
-		opt.yaxis.min = -1.2;
-
+		Options opt = new Options();
+		opt.xaxis.autoscaleMargin = 0.02;
+		opt.xaxis.ticks = new Vector<TickData>();
+		opt.yaxis.max = 2;
+		opt.yaxis.min = -2;
+		Vector<MarkingData> markings = new Vector<MarkingData>();
+		markings.add(new MarkingData(0xf6f6f6, 0, null, new RangeData(.5, Double.NaN)));
+		markings.add(new MarkingData(0xf6f6f6, 0, null, new RangeData(Double.NaN, -.5)));
+		markings.add(new MarkingData(0xff000000, 1, new RangeData(2, 2), null));
+		markings.add(new MarkingData(0xff000000, 1, new RangeData(8, 8), null));
+		opt.grid.markings = markings;
 		
 		FlotDraw fd = new FlotDraw(sds, opt, null);
 

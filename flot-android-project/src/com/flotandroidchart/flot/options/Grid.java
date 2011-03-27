@@ -17,6 +17,9 @@ limitations under the License.
 
 package com.flotandroidchart.flot.options;
 
+import java.util.Vector;
+
+import com.flotandroidchart.flot.data.MarkingData;
 import com.flotandroidchart.flot.format.TooltipFormatter;
 
 public class Grid {
@@ -28,8 +31,8 @@ public class Grid {
 	public int labelMargin = 5;
 	public int borderWidth = 2;
 	public int borderColor = 0x545454;
-	public Object markings = null;
-	public String markingsColor = "#f4f4f4";
+	public Vector<MarkingData> markings = null;
+	public int markingsColor = 0xf4f4f4;
 	public int markingsLineWidth = 2;
 	public Boolean clickable = false;
 	public Boolean hoverable = false;
