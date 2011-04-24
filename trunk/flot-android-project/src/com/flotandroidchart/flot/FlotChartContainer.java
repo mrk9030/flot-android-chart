@@ -135,7 +135,6 @@ public class FlotChartContainer extends SurfaceView implements SurfaceHolder.Cal
 						
 						mLastTouchX = x1;
 						mLastTouchY = y1;
-						bMoved = true;
 						break;
 					case MotionEvent.ACTION_UP:
 						mActivePointerId = INVALID_POINTER_ID;
