@@ -57,6 +57,8 @@ public class FlotChartContainer extends SurfaceView implements SurfaceHolder.Cal
     private float mLastTouchY;
     private int mActivePointerId = INVALID_POINTER_ID;
     private boolean bMoved = false;
+    private boolean mGameIsRunning;
+
     
 	/**
 	 * Default FlotChartContainer Constructor to build FlotChartContainer
@@ -180,13 +182,20 @@ public class FlotChartContainer extends SurfaceView implements SurfaceHolder.Cal
 	@Override
 	public void surfaceCreated(SurfaceHolder holder) {
 		// TODO Auto-generated method stub
-		drawThread.setRunning(true);
-		drawThread.start();
+		if (!mGameIsRunning) {
+		    drawThread.setRunning(true);
+		    drawThread.start();
+		    mGameIsRunning = true;
+		}
+		else {
+			drawThread.onResume();
+		}
 	}
 
 	@Override
 	public void surfaceDestroyed(SurfaceHolder holder) {
 		// TODO Auto-generated method stub
+		
 		boolean retry = true;
 		drawThread.setRunning(false); 
 		while (retry) {
@@ -226,6 +235,10 @@ public class FlotChartContainer extends SurfaceView implements SurfaceHolder.Cal
 			mRun = b;
 		}
 		
+		private Object mPauseLock = new Object();
+		private boolean mPaused;
+
+		
 		public void run() {
 			int fps = 0;  
 			long cur = System.currentTimeMillis();  
@@ -237,7 +250,7 @@ public class FlotChartContainer extends SurfaceView implements SurfaceHolder.Cal
 				timer = new FPSTimer(60);
 			}			
 			
-			while (mRun) {
+			while (mRun) {				
 				Canvas c = null;
 				if (isdraw && _fd != null) { 
 					try {
@@ -260,19 +273,48 @@ public class FlotChartContainer extends SurfaceView implements SurfaceHolder.Cal
 					fps = 0;
 					cur = now; 
 				}
+
+				synchronized (mPauseLock) {
+					while (mPaused) {
+				        try {
+				            mPauseLock.wait();
+				        } catch (InterruptedException e) {
+				        }
+					}
+				}
+
 			}
 		}
 		
 		protected void doDraw(Canvas canvas) {
-			Rect mRect = new Rect();
-			canvas.getClipBounds(mRect);
-			if(_fd != null) {
-				canvas.save();
-				canvas.translate(mRect.left, mRect.top);
-			    _fd.draw(canvas, mRect.width(), mRect.height());
-			    //_fd.getEventHolder().dispatchEvent("canvasOverlay", new FlotEvent(canvas));
-			    canvas.restore();
+			if(canvas != null) {
+				Rect mRect = new Rect();
+				canvas.getClipBounds(mRect);
+				if (_fd != null) {
+					canvas.save();
+					canvas.translate(mRect.left, mRect.top);
+					_fd.draw(canvas, mRect.width(), mRect.height());
+					// _fd.getEventHolder().dispatchEvent("canvasOverlay", new
+					// FlotEvent(canvas));
+					canvas.restore();
+				}
 			}
 		}
+		
+		// Two methods for your Runnable/Thread class to manage the Thread properly.
+		public void onPause() {
+		    synchronized (mPauseLock) {
+		        mPaused = true;
+		        Log.d("Draw Thread", "Draw Thread Paused");
+		    }
+		}
+		
+		public void onResume() {
+		    synchronized (mPauseLock) {
+		        mPaused = false;
+		        mPauseLock.notifyAll();
+		    }
+		}
+
 	}
 }
